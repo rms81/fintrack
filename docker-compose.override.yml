@@ -1,13 +1,16 @@
-# Docker Compose override for local development
-# This file is automatically loaded with docker compose up
+# Docker Compose override for development
+# Usage: docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
 
 services:
-  # Only run PostgreSQL for development
-  # The app runs locally with 'dotnet run'
+  # Only run database in development - app runs on host
   app:
     profiles:
-      - production
+      - production  # Exclude from default dev compose
 
   db:
+    ports:
+      - "5432:5432"  # Expose for local development
     environment:
+      - POSTGRES_USER=fintrack
       - POSTGRES_PASSWORD=fintrack_dev
+      - POSTGRES_DB=fintrack
