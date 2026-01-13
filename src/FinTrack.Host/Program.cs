@@ -1,3 +1,4 @@
+using FinTrack.Host.Auth;
 using FinTrack.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddFinTrackAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -13,6 +15,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/", () => "FinTrack API")
     .WithName("Root");
