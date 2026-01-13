@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain entities and feature handlers - minimal dependencies -->
+
+</Project>

@@ -1,0 +1,13 @@
+# Docker Compose override for local development
+# This file is automatically loaded with docker compose up
+
+services:
+  # Only run PostgreSQL for development
+  # The app runs locally with 'dotnet run'
+  app:
+    profiles:
+      - production
+
+  db:
+    environment:
+      - POSTGRES_PASSWORD=fintrack_dev
