@@ -8,4 +8,6 @@ public class Account : Entity
     public string Currency { get; set; } = "EUR";
 
     public Profile? Profile { get; init; }
+    public ICollection<Transaction> Transactions { get; init; } = new List<Transaction>();
+    public ICollection<ImportSession> ImportSessions { get; init; } = new List<ImportSession>();
 }

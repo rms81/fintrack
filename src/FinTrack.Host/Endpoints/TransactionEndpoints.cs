@@ -1,0 +1,200 @@
+using FinTrack.Core.Features.Transactions;
+using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Wolverine.Http;
+
+namespace FinTrack.Host.Endpoints;
+
+public static class TransactionEndpoints
+{
+    [WolverineGet("/api/profiles/{profileId}/transactions")]
+    public static async Task<IResult> GetTransactions(
+        Guid profileId,
+        [FromQuery] Guid? accountId,
+        [FromQuery] Guid? categoryId,
+        [FromQuery] DateOnly? fromDate,
+        [FromQuery] DateOnly? toDate,
+        [FromQuery] decimal? minAmount,
+        [FromQuery] decimal? maxAmount,
+        [FromQuery] string? search,
+        [FromQuery] bool? uncategorized,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        FinTrackDbContext db = null!,
+        ICurrentUser currentUser = null!,
+        CancellationToken ct = default)
+    {
+        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+            return Results.Unauthorized();
+
+        var profileExists = await db.Profiles
+            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+
+        if (!profileExists)
+            return Results.NotFound();
+
+        var query = db.Transactions
+            .Where(t => t.Account!.ProfileId == profileId);
+
+        if (accountId.HasValue)
+            query = query.Where(t => t.AccountId == accountId.Value);
+
+        if (categoryId.HasValue)
+            query = query.Where(t => t.CategoryId == categoryId.Value);
+
+        if (fromDate.HasValue)
+            query = query.Where(t => t.Date >= fromDate.Value);
+
+        if (toDate.HasValue)
+            query = query.Where(t => t.Date <= toDate.Value);
+
+        if (minAmount.HasValue)
+            query = query.Where(t => t.Amount >= minAmount.Value);
+
+        if (maxAmount.HasValue)
+            query = query.Where(t => t.Amount <= maxAmount.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(t => EF.Functions.ILike(t.Description, $"%{search}%"));
+
+        if (uncategorized == true)
+            query = query.Where(t => t.CategoryId == null);
+
+        var totalCount = await query.CountAsync(ct);
+
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(1, page);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var transactions = await query
+            .OrderByDescending(t => t.Date)
+            .ThenByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(t => new TransactionDto(
+                t.Id,
+                t.AccountId,
+                t.CategoryId,
+                t.Category != null ? t.Category.Name : null,
+                t.Date,
+                t.Amount,
+                t.Description,
+                t.Notes,
+                t.Tags,
+                t.CreatedAt,
+                t.UpdatedAt))
+            .ToListAsync(ct);
+
+        var result = new TransactionPage(transactions, totalCount, page, pageSize, totalPages);
+        return Results.Ok(result);
+    }
+
+    [WolverineGet("/api/transactions/{id}")]
+    public static async Task<IResult> GetTransaction(
+        Guid id,
+        FinTrackDbContext db,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+            return Results.Unauthorized();
+
+        var transaction = await db.Transactions
+            .Where(t => t.Id == id && t.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .Select(t => new TransactionDto(
+                t.Id,
+                t.AccountId,
+                t.CategoryId,
+                t.Category != null ? t.Category.Name : null,
+                t.Date,
+                t.Amount,
+                t.Description,
+                t.Notes,
+                t.Tags,
+                t.CreatedAt,
+                t.UpdatedAt))
+            .FirstOrDefaultAsync(ct);
+
+        return transaction is null ? Results.NotFound() : Results.Ok(transaction);
+    }
+
+    [WolverinePut("/api/transactions/{id}")]
+    public static async Task<IResult> UpdateTransaction(
+        Guid id,
+        [FromBody] UpdateTransactionRequest request,
+        FinTrackDbContext db,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+            return Results.Unauthorized();
+
+        var transaction = await db.Transactions
+            .Include(t => t.Account)
+                .ThenInclude(a => a!.Profile)
+            .Where(t => t.Id == id && t.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (transaction is null)
+            return Results.NotFound();
+
+        // Verify category belongs to same profile if specified
+        if (request.CategoryId.HasValue)
+        {
+            var categoryExists = await db.Categories
+                .AnyAsync(c => c.Id == request.CategoryId.Value && c.ProfileId == transaction.Account!.ProfileId, ct);
+            if (!categoryExists)
+                return Results.BadRequest(new { error = "Category not found in this profile" });
+        }
+
+        transaction.CategoryId = request.CategoryId;
+        transaction.Notes = request.Notes ?? transaction.Notes;
+        transaction.Tags = request.Tags ?? transaction.Tags;
+
+        await db.SaveChangesAsync(ct);
+
+        var categoryName = request.CategoryId.HasValue
+            ? await db.Categories.Where(c => c.Id == request.CategoryId.Value).Select(c => c.Name).FirstOrDefaultAsync(ct)
+            : null;
+
+        var result = new TransactionDto(
+            transaction.Id,
+            transaction.AccountId,
+            transaction.CategoryId,
+            categoryName,
+            transaction.Date,
+            transaction.Amount,
+            transaction.Description,
+            transaction.Notes,
+            transaction.Tags,
+            transaction.CreatedAt,
+            transaction.UpdatedAt);
+
+        return Results.Ok(result);
+    }
+
+    [WolverineDelete("/api/transactions/{id}")]
+    public static async Task<IResult> DeleteTransaction(
+        Guid id,
+        FinTrackDbContext db,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+            return Results.Unauthorized();
+
+        var transaction = await db.Transactions
+            .Where(t => t.Id == id && t.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (transaction is null)
+            return Results.NotFound();
+
+        db.Transactions.Remove(transaction);
+        await db.SaveChangesAsync(ct);
+
+        return Results.NoContent();
+    }
+}

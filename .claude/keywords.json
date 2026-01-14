@@ -1,0 +1,86 @@
+{
+  "keywords": {
+    "systems/development.md": [
+      "development", "dev", "local", "localhost", "setup",
+      "docker", "compose", "migration", "test", "debug",
+      "vite", "npm", "dotnet run", "environment"
+    ],
+    "systems/production.md": [
+      "production", "prod", "deploy", "deployment", "hosting",
+      "ci/cd", "docker build", "release", "container"
+    ],
+    "systems/database.md": [
+      "database", "postgres", "postgresql", "migration",
+      "ef core", "dbcontext", "schema", "table", "index",
+      "uuidv7", "snake_case", "connection string"
+    ],
+    "modules/profiles.md": [
+      "profile", "profiles", "personal", "business",
+      "CreateProfile", "GetProfiles", "ProfileDto",
+      "multi-profile", "profile separation"
+    ],
+    "modules/accounts.md": [
+      "account", "accounts", "bank account", "bank",
+      "CreateAccount", "GetAccounts", "AccountDto",
+      "account configuration"
+    ],
+    "modules/transactions.md": [
+      "transaction", "transactions", "expense", "expenses",
+      "income", "spending", "amount", "date", "description",
+      "TransactionDto", "GetTransactions", "CreateTransaction"
+    ],
+    "modules/categories.md": [
+      "category", "categories", "categorize", "categorization",
+      "CategoryDto", "GetCategories", "CreateCategory",
+      "spending category", "expense type"
+    ],
+    "modules/import.md": [
+      "import", "csv", "upload", "bank statement",
+      "ImportTransactions", "csv import", "file upload",
+      "format detection", "column mapping", "parsing"
+    ],
+    "modules/rules-engine.md": [
+      "rules", "rule", "toml", "rules engine", "categorization",
+      "RulesEngine", "Tomlyn", "pattern matching",
+      "automatic categorization", "rule-based"
+    ],
+    "modules/dashboard.md": [
+      "dashboard", "visualization", "chart", "charts",
+      "recharts", "spending", "analytics", "report",
+      "pie chart", "bar chart", "trends"
+    ],
+    "modules/nlq.md": [
+      "nlq", "natural language", "query", "question",
+      "sql translation", "ask", "search transactions",
+      "natural language query"
+    ],
+    "modules/auth.md": [
+      "auth", "authentication", "login", "logout",
+      "cookie", "session", "identity", "asp.net identity",
+      "register", "password"
+    ],
+    "integrations/openrouter.md": [
+      "openrouter", "llm", "gpt", "ai", "openai",
+      "format detection", "nlq translation", "api key",
+      "Llm__ApiKey", "Llm__Model"
+    ],
+    "integrations/postgres.md": [
+      "postgres", "postgresql", "npgsql", "ef core",
+      "entity framework", "dbcontext", "connection",
+      "jsonb", "array", "uuidv7"
+    ]
+  },
+  "co_activation": {
+    "modules/profiles.md": ["systems/database.md"],
+    "modules/accounts.md": ["modules/profiles.md", "systems/database.md"],
+    "modules/transactions.md": ["modules/accounts.md", "modules/categories.md"],
+    "modules/import.md": ["modules/transactions.md", "integrations/openrouter.md"],
+    "modules/rules-engine.md": ["modules/categories.md", "modules/transactions.md"],
+    "modules/dashboard.md": ["modules/transactions.md", "modules/categories.md"],
+    "modules/nlq.md": ["integrations/openrouter.md", "modules/transactions.md"],
+    "modules/auth.md": ["systems/database.md"],
+    "integrations/openrouter.md": ["systems/development.md"],
+    "integrations/postgres.md": ["systems/database.md"]
+  },
+  "pinned": ["systems/development.md"]
+}

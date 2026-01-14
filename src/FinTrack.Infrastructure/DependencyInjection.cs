@@ -1,4 +1,7 @@
+using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Options;
 using FinTrack.Infrastructure.Persistence;
+using FinTrack.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +24,26 @@ public static class DependencyInjection
 
             options.UseSnakeCaseNamingConvention();
         });
+
+        // Register Rules Engine
+        services.AddScoped<IRulesEngine, RulesEngine>();
+
+        // Register Import Service
+        services.AddScoped<IImportService, CsvImportService>();
+
+        // Register LLM Service (OpenRouter)
+        var llmSection = configuration.GetSection(LlmOptions.Section);
+        if (llmSection.Exists() && !string.IsNullOrEmpty(llmSection["ApiKey"]))
+        {
+            services.Configure<LlmOptions>(llmSection);
+            services.AddHttpClient<ILlmService, OpenRouterService>(client =>
+            {
+                var options = llmSection.Get<LlmOptions>()!;
+                client.BaseAddress = new Uri(options.BaseUrl);
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {options.ApiKey}");
+                client.DefaultRequestHeaders.Add("HTTP-Referer", "https://fintrack.local");
+            });
+        }
 
         return services;
     }

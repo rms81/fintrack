@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(dotnet *)",
+      "Bash(npm *)",
+      "Bash(git *)",
+      "Bash(docker *)",
+      "Bash(ls *)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "TodoWrite",
+      "WebFetch",
+      "WebSearch"
+    ]
+  },
+  "customInstructions": "You are working on FinTrack, a .NET 10 + React 19 expense tracking application. Always follow the coding standards in CLAUDE.md. Prefer functional C# patterns. Use Wolverine FX for CQRS. Keep solutions lean and avoid unnecessary abstractions."
+}

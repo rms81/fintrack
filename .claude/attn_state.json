@@ -1,0 +1,20 @@
+{
+  "scores": {
+    "systems/development.md": 1.0,
+    "systems/production.md": 0.0,
+    "systems/database.md": 0.0,
+    "modules/profiles.md": 0.0,
+    "modules/accounts.md": 0.0,
+    "modules/transactions.md": 0.08235429999999996,
+    "modules/categories.md": 0.04117714999999998,
+    "modules/import.md": 0.11764899999999995,
+    "modules/rules-engine.md": 0.11764899999999995,
+    "modules/dashboard.md": 0.0,
+    "modules/nlq.md": 0.0,
+    "modules/auth.md": 0.0,
+    "integrations/openrouter.md": 0.09175040000000001,
+    "integrations/postgres.md": 0.0
+  },
+  "turn_count": 12,
+  "last_update": "2026-01-14T10:42:23.195880"
+}
