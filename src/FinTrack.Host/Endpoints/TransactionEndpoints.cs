@@ -7,9 +7,18 @@ using Wolverine.Http;
 
 namespace FinTrack.Host.Endpoints;
 
+/// <summary>
+/// Endpoints for managing financial transactions.
+/// </summary>
 public static class TransactionEndpoints
 {
     [WolverineGet("/api/profiles/{profileId}/transactions")]
+    [Tags("Transactions")]
+    [EndpointSummary("List transactions with filtering")]
+    [EndpointDescription("Returns a paginated list of transactions for a profile. Supports filtering by account, category, date range, amount range, search text, and uncategorized status.")]
+    [ProducesResponseType<TransactionPage>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetTransactions(
         Guid profileId,
         [FromQuery] Guid? accountId,
@@ -92,6 +101,12 @@ public static class TransactionEndpoints
     }
 
     [WolverineGet("/api/transactions/{id}")]
+    [Tags("Transactions")]
+    [EndpointSummary("Get a transaction by ID")]
+    [EndpointDescription("Returns a single transaction by its unique identifier.")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetTransaction(
         Guid id,
         FinTrackDbContext db,
@@ -121,6 +136,13 @@ public static class TransactionEndpoints
     }
 
     [WolverinePut("/api/transactions/{id}")]
+    [Tags("Transactions")]
+    [EndpointSummary("Update a transaction")]
+    [EndpointDescription("Updates a transaction's category, notes, and tags. The date, amount, and description are read-only as they come from the import source.")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> UpdateTransaction(
         Guid id,
         [FromBody] UpdateTransactionRequest request,
@@ -176,6 +198,12 @@ public static class TransactionEndpoints
     }
 
     [WolverineDelete("/api/transactions/{id}")]
+    [Tags("Transactions")]
+    [EndpointSummary("Delete a transaction")]
+    [EndpointDescription("Permanently deletes a transaction.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> DeleteTransaction(
         Guid id,
         FinTrackDbContext db,

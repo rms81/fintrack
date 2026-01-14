@@ -8,9 +8,19 @@ using Wolverine.Http;
 
 namespace FinTrack.Host.Endpoints;
 
+/// <summary>
+/// Endpoints for managing TOML-based categorization rules.
+/// </summary>
 public static class RuleEndpoints
 {
     [WolverinePost("/api/profiles/{profileId}/rules")]
+    [Tags("Rules")]
+    [EndpointSummary("Create a new categorization rule")]
+    [EndpointDescription("Creates a new TOML-based categorization rule. Rules are applied in priority order during import and can be manually triggered.")]
+    [ProducesResponseType<RuleDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> CreateRule(
         Guid profileId,
         [FromBody] CreateRuleRequest request,
@@ -58,6 +68,12 @@ public static class RuleEndpoints
     }
 
     [WolverineGet("/api/profiles/{profileId}/rules")]
+    [Tags("Rules")]
+    [EndpointSummary("List categorization rules")]
+    [EndpointDescription("Returns all categorization rules for a profile, ordered by priority.")]
+    [ProducesResponseType<List<RuleDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetRules(
         Guid profileId,
         FinTrackDbContext db,
@@ -90,6 +106,12 @@ public static class RuleEndpoints
     }
 
     [WolverineGet("/api/rules/{id}")]
+    [Tags("Rules")]
+    [EndpointSummary("Get a rule by ID")]
+    [EndpointDescription("Returns a single categorization rule by its unique identifier.")]
+    [ProducesResponseType<RuleDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetRule(
         Guid id,
         FinTrackDbContext db,
@@ -115,6 +137,13 @@ public static class RuleEndpoints
     }
 
     [WolverinePut("/api/rules/{id}")]
+    [Tags("Rules")]
+    [EndpointSummary("Update a categorization rule")]
+    [EndpointDescription("Updates an existing rule's name, priority, TOML content, and active status.")]
+    [ProducesResponseType<RuleDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> UpdateRule(
         Guid id,
         [FromBody] UpdateRuleRequest request,
@@ -157,6 +186,12 @@ public static class RuleEndpoints
     }
 
     [WolverineDelete("/api/rules/{id}")]
+    [Tags("Rules")]
+    [EndpointSummary("Delete a categorization rule")]
+    [EndpointDescription("Permanently deletes a categorization rule. Existing transaction categories are not affected.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> DeleteRule(
         Guid id,
         FinTrackDbContext db,
@@ -180,6 +215,12 @@ public static class RuleEndpoints
     }
 
     [WolverinePost("/api/profiles/{profileId}/rules/test")]
+    [Tags("Rules")]
+    [EndpointSummary("Test rules against a sample transaction")]
+    [EndpointDescription("Tests the active categorization rules against a sample transaction without saving anything. Useful for debugging rule configurations.")]
+    [ProducesResponseType<TestRulesResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> TestRules(
         Guid profileId,
         [FromBody] TestRulesRequest request,
@@ -220,6 +261,12 @@ public static class RuleEndpoints
     }
 
     [WolverinePost("/api/profiles/{profileId}/rules/apply")]
+    [Tags("Rules")]
+    [EndpointSummary("Apply rules to existing transactions")]
+    [EndpointDescription("Applies all active categorization rules to existing transactions. Can optionally target only uncategorized transactions.")]
+    [ProducesResponseType<ApplyRulesResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> ApplyRules(
         Guid profileId,
         [FromBody] ApplyRulesRequest request,
