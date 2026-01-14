@@ -8,7 +8,7 @@ public class Profile : Entity
     public required string Name { get; set; }
     public ProfileType Type { get; set; } = ProfileType.Personal;
 
-    public User? User { get; init; }
+    public ApplicationUser? User { get; init; }
     public ICollection<Account> Accounts { get; init; } = new List<Account>();
     public ICollection<Category> Categories { get; init; } = new List<Category>();
     public ICollection<CategorizationRule> CategorizationRules { get; init; } = new List<CategorizationRule>();

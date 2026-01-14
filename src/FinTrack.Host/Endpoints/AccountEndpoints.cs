@@ -27,12 +27,12 @@ public static class AccountEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         // Verify profile belongs to user
         var profile = await db.Profiles
-            .Where(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.Id == profileId && p.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (profile is null)
@@ -74,12 +74,12 @@ public static class AccountEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         // Verify profile belongs to user
         var profileExists = await db.Profiles
-            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(p => p.Id == profileId && p.UserId == userId, ct);
 
         if (!profileExists)
             return Results.NotFound();
@@ -114,11 +114,11 @@ public static class AccountEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var account = await db.Accounts
-            .Where(a => a.Id == id && a.ProfileId == profileId && a.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(a => a.Id == id && a.ProfileId == profileId && a.Profile!.UserId == userId)
             .Select(a => new AccountDto(
                 a.Id,
                 a.ProfileId,
@@ -147,11 +147,11 @@ public static class AccountEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var account = await db.Accounts
-            .Where(a => a.Id == id && a.ProfileId == profileId && a.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(a => a.Id == id && a.ProfileId == profileId && a.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (account is null)
@@ -189,11 +189,11 @@ public static class AccountEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var account = await db.Accounts
-            .Where(a => a.Id == id && a.ProfileId == profileId && a.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(a => a.Id == id && a.ProfileId == profileId && a.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (account is null)

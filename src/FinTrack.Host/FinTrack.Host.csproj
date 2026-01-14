@@ -14,7 +14,6 @@
     <PackageReference Include="WolverineFx.Http" Version="5.*" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.*" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.*" />
   </ItemGroup>
 
 </Project>

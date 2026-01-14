@@ -1,7 +1,10 @@
 using FinTrack.Core.Features.Example;
 using FinTrack.Host.Auth;
+using FinTrack.Host.Endpoints;
 using FinTrack.Infrastructure;
+using FinTrack.Infrastructure.Persistence;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Wolverine;
 using Wolverine.Http;
@@ -54,6 +57,14 @@ builder.Services.AddWolverineHttp();
 
 var app = builder.Build();
 
+// Apply pending migrations in development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<FinTrackDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 // Configure the HTTP request pipeline
 app.MapOpenApi();
 app.MapScalarApiReference(options =>
@@ -82,6 +93,9 @@ app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }))
     .WithTags("System")
     .WithSummary("Health Check")
     .WithDescription("Returns the health status of the API. Returns 200 OK if the service is healthy.");
+
+// Map auth endpoints
+app.MapAuthEndpoints();
 
 app.Run();
 

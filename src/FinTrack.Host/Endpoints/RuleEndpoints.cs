@@ -29,11 +29,11 @@ public static class RuleEndpoints
         IRulesEngine rulesEngine,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profile = await db.Profiles
-            .Where(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.Id == profileId && p.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (profile is null)
@@ -80,11 +80,11 @@ public static class RuleEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profileExists = await db.Profiles
-            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(p => p.Id == profileId && p.UserId == userId, ct);
 
         if (!profileExists)
             return Results.NotFound();
@@ -118,11 +118,11 @@ public static class RuleEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var rule = await db.CategorizationRules
-            .Where(r => r.Id == id && r.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(r => r.Id == id && r.Profile!.UserId == userId)
             .Select(r => new RuleDto(
                 r.Id,
                 r.Name,
@@ -152,11 +152,11 @@ public static class RuleEndpoints
         IRulesEngine rulesEngine,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var rule = await db.CategorizationRules
-            .Where(r => r.Id == id && r.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(r => r.Id == id && r.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (rule is null)
@@ -198,11 +198,11 @@ public static class RuleEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var rule = await db.CategorizationRules
-            .Where(r => r.Id == id && r.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(r => r.Id == id && r.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (rule is null)
@@ -229,11 +229,11 @@ public static class RuleEndpoints
         IRulesEngine rulesEngine,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profileExists = await db.Profiles
-            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(p => p.Id == profileId && p.UserId == userId, ct);
 
         if (!profileExists)
             return Results.NotFound();
@@ -275,11 +275,11 @@ public static class RuleEndpoints
         IRulesEngine rulesEngine,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profileExists = await db.Profiles
-            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(p => p.Id == profileId && p.UserId == userId, ct);
 
         if (!profileExists)
             return Results.NotFound();

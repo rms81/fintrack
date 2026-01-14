@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/layout';
 import { ProtectedRoute } from './components/protected-route';
+import { LoginPage, RegisterPage } from './features/auth';
 import { DashboardPage } from './features/dashboard';
 import { AccountsPage, NewAccountPage, EditAccountPage } from './features/accounts';
 import { ProfilesPage, NewProfilePage, EditProfilePage } from './features/profiles';
@@ -24,6 +25,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Auth routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
           {/* Public routes */}
           <Route path="/profiles/new" element={<NewProfilePage />} />
 

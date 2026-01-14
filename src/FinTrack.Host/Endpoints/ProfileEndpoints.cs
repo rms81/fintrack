@@ -27,28 +27,12 @@ public static class ProfileEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
-
-        // Get or create user
-        var user = await db.Users
-            .FirstOrDefaultAsync(u => u.ExternalId == currentUser.Id, ct);
-
-        if (user is null)
-        {
-            user = new User
-            {
-                ExternalId = currentUser.Id,
-                Email = currentUser.Email ?? "unknown@example.com",
-                DisplayName = currentUser.DisplayName
-            };
-            db.Users.Add(user);
-            await db.SaveChangesAsync(ct);
-        }
 
         var profile = new Profile
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = request.Name,
             Type = request.Type
         };
@@ -77,11 +61,11 @@ public static class ProfileEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profiles = await db.Profiles
-            .Where(p => p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.UserId == userId)
             .OrderBy(p => p.Name)
             .Select(p => new ProfileDto(
                 p.Id,
@@ -107,11 +91,11 @@ public static class ProfileEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profile = await db.Profiles
-            .Where(p => p.Id == id && p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.Id == id && p.UserId == userId)
             .Select(p => new ProfileDto(
                 p.Id,
                 p.Name,
@@ -137,11 +121,11 @@ public static class ProfileEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profile = await db.Profiles
-            .Where(p => p.Id == id && p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.Id == id && p.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (profile is null)
@@ -175,11 +159,11 @@ public static class ProfileEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profile = await db.Profiles
-            .Where(p => p.Id == id && p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.Id == id && p.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (profile is null)

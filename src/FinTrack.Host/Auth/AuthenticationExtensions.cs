@@ -1,7 +1,8 @@
 using System.Security.Claims;
+using FinTrack.Core.Domain.Entities;
 using FinTrack.Core.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using FinTrack.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 
 namespace FinTrack.Host.Auth;
 
@@ -14,56 +15,50 @@ public static class AuthenticationExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUser>();
 
-        var authSection = configuration.GetSection("Auth");
-        var authority = authSection["Authority"];
-        var audience = authSection["Audience"] ?? "fintrack";
+        // Add Authorization
+        services.AddAuthorization();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        // Add Identity
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
             {
-                options.Authority = authority;
-                options.Audience = audience;
-                options.RequireHttpsMetadata = !string.IsNullOrEmpty(authority)
-                    && !authority.Contains("localhost");
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddEntityFrameworkStores<FinTrackDbContext>()
+            .AddDefaultTokenProviders();
 
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ClockSkew = TimeSpan.FromMinutes(5)
-                };
-
-                options.Events = new JwtBearerEvents
-                {
-                    OnAuthenticationFailed = context =>
-                    {
-                        if (context.Exception is SecurityTokenExpiredException)
-                        {
-                            context.Response.Headers.Append("Token-Expired", "true");
-                        }
-                        return Task.CompletedTask;
-                    }
-                };
-            });
-
-        services.AddAuthorizationBuilder()
-            .AddPolicy("RequireAuthenticatedUser", policy =>
-                policy.RequireAuthenticatedUser());
+        // Configure cookie
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.ExpireTimeSpan = TimeSpan.FromDays(7);
+            options.SlidingExpiration = true;
+            options.Events.OnRedirectToLogin = context =>
+            {
+                context.Response.StatusCode = 401;
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                context.Response.StatusCode = 403;
+                return Task.CompletedTask;
+            };
+        });
 
         return services;
     }
 
     public static string? GetUserId(this ClaimsPrincipal user) =>
-        user.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? user.FindFirstValue("sub");
+        user.FindFirstValue(ClaimTypes.NameIdentifier);
 
     public static string? GetUserEmail(this ClaimsPrincipal user) =>
-        user.FindFirstValue(ClaimTypes.Email)
-        ?? user.FindFirstValue("email");
+        user.FindFirstValue(ClaimTypes.Email);
 
     public static string? GetUserDisplayName(this ClaimsPrincipal user) =>
-        user.FindFirstValue(ClaimTypes.Name)
-        ?? user.FindFirstValue("name");
+        user.FindFirstValue(ClaimTypes.Name);
 }

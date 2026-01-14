@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router';
-import { useActiveProfile, useProfiles } from '../hooks';
+import { useCurrentUser, useActiveProfile, useProfiles } from '../hooks';
 import { Spinner } from './ui/spinner';
 
 interface ProtectedRouteProps {
@@ -12,11 +12,12 @@ export function ProtectedRoute({
   requireProfile = true,
 }: ProtectedRouteProps) {
   const location = useLocation();
-  const { data: profiles, isLoading } = useProfiles();
+  const { data: user, isLoading: isLoadingUser, isError: isAuthError } = useCurrentUser();
+  const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
   const { activeProfileId } = useActiveProfile();
 
-  // Show loading while fetching profiles
-  if (isLoading) {
+  // Show loading while checking auth and fetching profiles
+  if (isLoadingUser || isLoadingProfiles) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -25,6 +26,11 @@ export function ProtectedRoute({
         </div>
       </div>
     );
+  }
+
+  // If not authenticated, redirect to login
+  if (isAuthError || !user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If profile is required but none exist, redirect to create profile

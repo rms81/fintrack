@@ -28,11 +28,11 @@ public static class CategoryEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profile = await db.Profiles
-            .Where(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id)
+            .Where(p => p.Id == profileId && p.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (profile is null)
@@ -85,11 +85,11 @@ public static class CategoryEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profileExists = await db.Profiles
-            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(p => p.Id == profileId && p.UserId == userId, ct);
 
         if (!profileExists)
             return Results.NotFound();
@@ -125,11 +125,11 @@ public static class CategoryEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var category = await db.Categories
-            .Where(c => c.Id == id && c.ProfileId == profileId && c.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(c => c.Id == id && c.ProfileId == profileId && c.Profile!.UserId == userId)
             .Select(c => new CategoryDto(
                 c.Id,
                 c.Name,
@@ -160,11 +160,11 @@ public static class CategoryEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var category = await db.Categories
-            .Where(c => c.Id == id && c.ProfileId == profileId && c.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(c => c.Id == id && c.ProfileId == profileId && c.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (category is null)
@@ -215,11 +215,11 @@ public static class CategoryEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var category = await db.Categories
-            .Where(c => c.Id == id && c.ProfileId == profileId && c.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(c => c.Id == id && c.ProfileId == profileId && c.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (category is null)

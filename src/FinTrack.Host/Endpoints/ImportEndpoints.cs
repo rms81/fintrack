@@ -30,12 +30,12 @@ public static class ImportEndpoints
         IImportService importService,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var account = await db.Accounts
             .Include(a => a.Profile)
-            .Where(a => a.Id == accountId && a.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(a => a.Id == accountId && a.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (account is null)
@@ -89,13 +89,13 @@ public static class ImportEndpoints
         IImportService importService,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var session = await db.ImportSessions
             .Include(s => s.Account)
                 .ThenInclude(a => a!.Profile)
-            .Where(s => s.Id == sessionId && s.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(s => s.Id == sessionId && s.Account!.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (session?.CsvData is null)
@@ -135,13 +135,13 @@ public static class ImportEndpoints
         IRulesEngine rulesEngine,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var session = await db.ImportSessions
             .Include(s => s.Account)
                 .ThenInclude(a => a!.Profile)
-            .Where(s => s.Id == sessionId && s.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(s => s.Id == sessionId && s.Account!.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (session?.CsvData is null)
@@ -225,11 +225,11 @@ public static class ImportEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var accountExists = await db.Accounts
-            .AnyAsync(a => a.Id == accountId && a.Profile!.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(a => a.Id == accountId && a.Profile!.UserId == userId, ct);
 
         if (!accountExists)
             return Results.NotFound();

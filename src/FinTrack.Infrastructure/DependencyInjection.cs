@@ -3,6 +3,7 @@ using FinTrack.Infrastructure.Options;
 using FinTrack.Infrastructure.Persistence;
 using FinTrack.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +24,9 @@ public static class DependencyInjection
                 });
 
             options.UseSnakeCaseNamingConvention();
+
+            // Suppress warning about pending model changes (occurs with manually created migrations)
+            options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
         // Register Rules Engine
@@ -31,7 +35,7 @@ public static class DependencyInjection
         // Register Import Service
         services.AddScoped<IImportService, CsvImportService>();
 
-        // Register LLM Service (OpenRouter)
+        // Register LLM Service (OpenRouter or Stub)
         var llmSection = configuration.GetSection(LlmOptions.Section);
         if (llmSection.Exists() && !string.IsNullOrEmpty(llmSection["ApiKey"]))
         {
@@ -43,6 +47,11 @@ public static class DependencyInjection
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {options.ApiKey}");
                 client.DefaultRequestHeaders.Add("HTTP-Referer", "https://fintrack.local");
             });
+        }
+        else
+        {
+            // Register stub when no LLM API key is configured
+            services.AddSingleton<ILlmService, StubLlmService>();
         }
 
         return services;

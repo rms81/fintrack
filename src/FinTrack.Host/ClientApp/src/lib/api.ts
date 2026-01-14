@@ -1,4 +1,7 @@
 import {
+  type User,
+  type RegisterRequest,
+  type LoginRequest,
   type Profile,
   type CreateProfileRequest,
   type UpdateProfileRequest,
@@ -64,6 +67,28 @@ async function request<T>(
   });
   return handleResponse<T>(response);
 }
+
+// Auth API
+export const authApi = {
+  register: (data: RegisterRequest) =>
+    request<User>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  login: (data: LoginRequest) =>
+    request<User>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  logout: () =>
+    request<void>('/auth/logout', {
+      method: 'POST',
+    }),
+
+  getCurrentUser: () => request<User>('/auth/me'),
+};
 
 // Profile API
 export const profilesApi = {

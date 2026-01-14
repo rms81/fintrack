@@ -35,11 +35,11 @@ public static class TransactionEndpoints
         ICurrentUser currentUser = null!,
         CancellationToken ct = default)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var profileExists = await db.Profiles
-            .AnyAsync(p => p.Id == profileId && p.User!.ExternalId == currentUser.Id, ct);
+            .AnyAsync(p => p.Id == profileId && p.UserId == userId, ct);
 
         if (!profileExists)
             return Results.NotFound();
@@ -113,11 +113,11 @@ public static class TransactionEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var transaction = await db.Transactions
-            .Where(t => t.Id == id && t.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(t => t.Id == id && t.Account!.Profile!.UserId == userId)
             .Select(t => new TransactionDto(
                 t.Id,
                 t.AccountId,
@@ -150,13 +150,13 @@ public static class TransactionEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var transaction = await db.Transactions
             .Include(t => t.Account)
                 .ThenInclude(a => a!.Profile)
-            .Where(t => t.Id == id && t.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(t => t.Id == id && t.Account!.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (transaction is null)
@@ -210,11 +210,11 @@ public static class TransactionEndpoints
         ICurrentUser currentUser,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.Id is null)
+        if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var transaction = await db.Transactions
-            .Where(t => t.Id == id && t.Account!.Profile!.User!.ExternalId == currentUser.Id)
+            .Where(t => t.Id == id && t.Account!.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (transaction is null)

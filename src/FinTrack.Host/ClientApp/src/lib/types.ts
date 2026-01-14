@@ -1,5 +1,24 @@
 // API Types - matching backend DTOs
 
+// Auth types
+export interface User {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  displayName: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
 // ProfileType matches C# enum values
 export const ProfileType = {
   Personal: 0,

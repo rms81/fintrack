@@ -11,7 +11,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<FinTrackDb
 
         // Use a default connection string for design-time operations
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-            ?? "Host=localhost;Database=fintrack_dev;Username=fintrack;Password=secret";
+            ?? "Host=localhost;Database=fintrack;Username=fintrack;Password=fintrack_secret";
 
         optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
         {
