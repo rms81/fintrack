@@ -1,13 +1,37 @@
 using FinTrack.Core.Features.Example;
 using FinTrack.Host.Auth;
 using FinTrack.Infrastructure;
+using Microsoft.AspNetCore.OpenApi;
+using Scalar.AspNetCore;
 using Wolverine;
 using Wolverine.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, ct) =>
+    {
+        document.Info = new()
+        {
+            Title = "FinTrack API",
+            Version = "v1",
+            Description = "Self-hosted expense tracking API for individuals and sole proprietors. " +
+                          "Manage profiles, accounts, transactions, categories, and import bank statements.",
+            Contact = new()
+            {
+                Name = "FinTrack Support",
+                Email = "support@fintrack.local"
+            },
+            License = new()
+            {
+                Name = "MIT"
+            }
+        };
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddFinTrackAuthentication(builder.Configuration);
 
@@ -31,10 +55,13 @@ builder.Services.AddWolverineHttp();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-}
+    options.WithTitle("FinTrack API")
+           .WithTheme(ScalarTheme.BluePlanet)
+           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -44,10 +71,17 @@ app.MapWolverineEndpoints();
 
 // Basic endpoints
 app.MapGet("/", () => "FinTrack API")
-    .WithName("Root");
+    .WithName("Root")
+    .WithTags("System")
+    .WithSummary("API Root")
+    .WithDescription("Returns the API name. Use this to verify the API is running.")
+    .ExcludeFromDescription();
 
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }))
-    .WithName("Health");
+    .WithName("Health")
+    .WithTags("System")
+    .WithSummary("Health Check")
+    .WithDescription("Returns the health status of the API. Returns 200 OK if the service is healthy.");
 
 app.Run();
 

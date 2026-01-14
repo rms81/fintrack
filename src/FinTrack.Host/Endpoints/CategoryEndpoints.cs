@@ -8,9 +8,19 @@ using Wolverine.Http;
 
 namespace FinTrack.Host.Endpoints;
 
+/// <summary>
+/// Endpoints for managing transaction categories.
+/// </summary>
 public static class CategoryEndpoints
 {
     [WolverinePost("/api/profiles/{profileId}/categories")]
+    [Tags("Categories")]
+    [EndpointSummary("Create a new category")]
+    [EndpointDescription("Creates a new category for organizing transactions. Categories can be nested using the parentId field.")]
+    [ProducesResponseType<CategoryDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> CreateCategory(
         Guid profileId,
         [FromBody] CreateCategoryRequest request,
@@ -63,6 +73,12 @@ public static class CategoryEndpoints
     }
 
     [WolverineGet("/api/profiles/{profileId}/categories")]
+    [Tags("Categories")]
+    [EndpointSummary("List categories in a profile")]
+    [EndpointDescription("Returns all categories within the specified profile, including transaction counts.")]
+    [ProducesResponseType<List<CategoryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetCategories(
         Guid profileId,
         FinTrackDbContext db,
@@ -96,6 +112,12 @@ public static class CategoryEndpoints
     }
 
     [WolverineGet("/api/profiles/{profileId}/categories/{id}")]
+    [Tags("Categories")]
+    [EndpointSummary("Get a category by ID")]
+    [EndpointDescription("Returns a single category by its unique identifier.")]
+    [ProducesResponseType<CategoryDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetCategory(
         Guid profileId,
         Guid id,
@@ -123,6 +145,13 @@ public static class CategoryEndpoints
     }
 
     [WolverinePut("/api/profiles/{profileId}/categories/{id}")]
+    [Tags("Categories")]
+    [EndpointSummary("Update a category")]
+    [EndpointDescription("Updates an existing category's name, icon, color, and parent.")]
+    [ProducesResponseType<CategoryDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> UpdateCategory(
         Guid profileId,
         Guid id,
@@ -173,6 +202,12 @@ public static class CategoryEndpoints
     }
 
     [WolverineDelete("/api/profiles/{profileId}/categories/{id}")]
+    [Tags("Categories")]
+    [EndpointSummary("Delete a category")]
+    [EndpointDescription("Permanently deletes a category. Transactions in this category will become uncategorized.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> DeleteCategory(
         Guid profileId,
         Guid id,

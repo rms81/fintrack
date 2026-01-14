@@ -9,9 +9,19 @@ using Wolverine.Http;
 
 namespace FinTrack.Host.Endpoints;
 
+/// <summary>
+/// Endpoints for importing bank statement CSV files.
+/// </summary>
 public static class ImportEndpoints
 {
     [WolverinePost("/api/accounts/{accountId}/import/upload")]
+    [Tags("Import")]
+    [EndpointSummary("Upload a CSV file for import")]
+    [EndpointDescription("Uploads a bank statement CSV file and analyzes its format using LLM-assisted detection. Returns the detected format configuration and sample rows for preview.")]
+    [ProducesResponseType<UploadResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> UploadCsv(
         Guid accountId,
         IFormFile file,
@@ -65,6 +75,12 @@ public static class ImportEndpoints
     }
 
     [WolverinePost("/api/import/{sessionId}/preview")]
+    [Tags("Import")]
+    [EndpointSummary("Preview import results")]
+    [EndpointDescription("Parses the uploaded CSV and returns a preview of transactions that will be imported, including duplicate detection.")]
+    [ProducesResponseType<PreviewResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> PreviewImport(
         Guid sessionId,
         [FromBody] PreviewRequest? request,
@@ -102,6 +118,14 @@ public static class ImportEndpoints
     }
 
     [WolverinePost("/api/import/{sessionId}/confirm")]
+    [Tags("Import")]
+    [EndpointSummary("Confirm and execute import")]
+    [EndpointDescription("Confirms the import session and creates transactions in the database. Automatically applies categorization rules to new transactions.")]
+    [ProducesResponseType<ConfirmImportResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public static async Task<IResult> ConfirmImport(
         Guid sessionId,
         [FromBody] ConfirmImportRequest? request,
@@ -189,6 +213,12 @@ public static class ImportEndpoints
     }
 
     [WolverineGet("/api/accounts/{accountId}/import/sessions")]
+    [Tags("Import")]
+    [EndpointSummary("List import sessions")]
+    [EndpointDescription("Returns the import history for an account, including status and any error messages.")]
+    [ProducesResponseType<List<ImportSessionDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetImportSessions(
         Guid accountId,
         FinTrackDbContext db,

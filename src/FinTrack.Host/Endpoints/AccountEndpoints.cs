@@ -8,9 +8,18 @@ using Wolverine.Http;
 
 namespace FinTrack.Host.Endpoints;
 
+/// <summary>
+/// Endpoints for managing bank accounts within profiles.
+/// </summary>
 public static class AccountEndpoints
 {
     [WolverinePost("/api/profiles/{profileId}/accounts")]
+    [Tags("Accounts")]
+    [EndpointSummary("Create a new account")]
+    [EndpointDescription("Creates a new bank account within the specified profile. Accounts are used to organize transactions by source (e.g., checking, savings, credit card).")]
+    [ProducesResponseType<AccountDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> CreateAccount(
         Guid profileId,
         [FromBody] CreateAccountRequest request,
@@ -53,6 +62,12 @@ public static class AccountEndpoints
     }
 
     [WolverineGet("/api/profiles/{profileId}/accounts")]
+    [Tags("Accounts")]
+    [EndpointSummary("List accounts in a profile")]
+    [EndpointDescription("Returns all bank accounts within the specified profile, ordered by name.")]
+    [ProducesResponseType<List<AccountDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetAccounts(
         Guid profileId,
         FinTrackDbContext db,
@@ -86,6 +101,12 @@ public static class AccountEndpoints
     }
 
     [WolverineGet("/api/profiles/{profileId}/accounts/{id}")]
+    [Tags("Accounts")]
+    [EndpointSummary("Get an account by ID")]
+    [EndpointDescription("Returns a single account by its unique identifier.")]
+    [ProducesResponseType<AccountDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> GetAccount(
         Guid profileId,
         Guid id,
@@ -112,6 +133,12 @@ public static class AccountEndpoints
     }
 
     [WolverinePut("/api/profiles/{profileId}/accounts/{id}")]
+    [Tags("Accounts")]
+    [EndpointSummary("Update an account")]
+    [EndpointDescription("Updates an existing account's name, bank name, and currency.")]
+    [ProducesResponseType<AccountDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> UpdateAccount(
         Guid profileId,
         Guid id,
@@ -149,6 +176,12 @@ public static class AccountEndpoints
     }
 
     [WolverineDelete("/api/profiles/{profileId}/accounts/{id}")]
+    [Tags("Accounts")]
+    [EndpointSummary("Delete an account")]
+    [EndpointDescription("Permanently deletes an account and all its transactions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> DeleteAccount(
         Guid profileId,
         Guid id,
