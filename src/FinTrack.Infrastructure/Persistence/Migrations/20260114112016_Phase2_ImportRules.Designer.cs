@@ -5,6 +5,7 @@ using FinTrack.Core.Domain.ValueObjects;
 using FinTrack.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrack.Persistence.Migrations
 {
     [DbContext(typeof(FinTrackDbContext))]
-    partial class FinTrackDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260114112016_Phase2_ImportRules")]
+    partial class Phase2_ImportRules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

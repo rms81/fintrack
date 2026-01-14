@@ -369,7 +369,7 @@ public class RulesEngine(ILogger<RulesEngine> logger) : IRulesEngine
     private struct DescriptionMatcher
     {
         public string[]? Contains { get; set; }
-        public string? Equals { get; set; }
+        public new string? Equals { get; set; }
         public string? StartsWith { get; set; }
         public string? EndsWith { get; set; }
         public string? Regex { get; set; }
@@ -384,7 +384,7 @@ public class RulesEngine(ILogger<RulesEngine> logger) : IRulesEngine
 
     private struct AmountMatcher
     {
-        public decimal? Equals { get; set; }
+        public new decimal? Equals { get; set; }
         public decimal? GreaterThan { get; set; }
         public decimal? LessThan { get; set; }
         public decimal? RangeMin { get; set; }

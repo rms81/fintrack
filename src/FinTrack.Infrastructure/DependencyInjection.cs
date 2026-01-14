@@ -35,7 +35,7 @@ public static class DependencyInjection
         var llmSection = configuration.GetSection(LlmOptions.Section);
         if (llmSection.Exists() && !string.IsNullOrEmpty(llmSection["ApiKey"]))
         {
-            services.Configure<LlmOptions>(llmSection);
+            services.Configure<LlmOptions>(options => llmSection.Bind(options));
             services.AddHttpClient<ILlmService, OpenRouterService>(client =>
             {
                 var options = llmSection.Get<LlmOptions>()!;

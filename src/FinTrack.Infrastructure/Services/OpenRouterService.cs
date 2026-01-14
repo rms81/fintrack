@@ -88,11 +88,11 @@ public class OpenRouterService(
         You never include explanations outside of the JSON structure.
         """;
 
-    private static string BuildCsvDetectionPrompt(string csvSample) => $"""
+    private static string BuildCsvDetectionPrompt(string csvSample) => $$"""
         Analyze this CSV bank statement sample and identify the column mappings.
 
         CSV Sample (first rows):
-        {csvSample}
+        {{csvSample}}
 
         Identify:
         1. Date column index (0-based) and format (e.g., "dd/MM/yyyy")
@@ -103,7 +103,7 @@ public class OpenRouterService(
         6. Whether first row is header
 
         Respond ONLY with this JSON format (no other text):
-        {{
+        {
           "delimiter": ",",
           "hasHeader": true,
           "dateColumn": 0,
@@ -114,7 +114,7 @@ public class OpenRouterService(
           "debitColumn": null,
           "creditColumn": null,
           "balanceColumn": null
-        }}
+        }
 
         amountType must be either "signed" (single column with positive/negative values) or "split" (separate debit and credit columns).
         """;
