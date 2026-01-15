@@ -29,17 +29,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
-
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: ./build.sh compile --configuration Release
 
-      - name: Run unit tests
-        run: dotnet test tests/FinTrack.Tests.Unit --no-build --configuration Release --verbosity normal
-
-      - name: Run integration tests
-        run: dotnet test tests/FinTrack.Tests.Integration --no-build --configuration Release --verbosity normal
+      - name: Test
+        run: ./build.sh test --configuration Release --skip
 
   frontend:
     name: Frontend
