@@ -63,7 +63,7 @@ export function ProfileForm({ profile, redirectTo = '/profiles' }: ProfileFormPr
         setActiveProfile(newProfile.id);
       }
       navigate(redirectTo);
-    } catch (error) {
+    } catch {
       // Error is handled by TanStack Query
     }
   };
