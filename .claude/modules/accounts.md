@@ -3,6 +3,18 @@
 ## Overview
 Accounts represent bank accounts or financial sources linked to a profile. They serve as the target for CSV imports and group transactions.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-A1 | User | add a bank account to my profile | I can import transactions from that account |
+| US-A2 | User | specify the bank/institution name | I can identify which bank the account belongs to |
+| US-A3 | User | set the account currency | amounts are displayed correctly |
+| US-A4 | User | mask my account number | I can identify accounts without exposing sensitive data |
+| US-A5 | User | deactivate an old account | it no longer appears in active lists but history is preserved |
+| US-A6 | User | see all transactions for a specific account | I can reconcile with my bank statement |
+| US-A7 | User | delete an account | I can remove accounts I added by mistake |
+
 ## Domain Model
 
 ### Account Entity

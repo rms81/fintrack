@@ -6,6 +6,19 @@
 ## Overview
 CSV import with LLM-assisted format detection for bank statements.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-I1 | User | upload a CSV file from my bank | I can import my transactions |
+| US-I2 | User | have the format auto-detected | I don't need to manually configure column mappings |
+| US-I3 | User | preview transactions before importing | I can verify the data looks correct |
+| US-I4 | User | adjust format settings if auto-detection is wrong | I can handle unusual CSV formats |
+| US-I5 | User | be warned about duplicate transactions | I don't accidentally import the same data twice |
+| US-I6 | User | see import progress and status | I know when the import is complete |
+| US-I7 | User | have rules automatically applied during import | new transactions are categorized immediately |
+| US-I8 | User | view my import history | I can track which files I've already imported |
+
 ## Flow
 
 ```

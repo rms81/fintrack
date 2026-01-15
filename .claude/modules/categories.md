@@ -3,6 +3,18 @@
 ## Overview
 Categories organize transactions into meaningful groups. They are profile-scoped and support hierarchical organization via parent-child relationships.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-C1 | User | have default categories when I create a profile | I can start categorizing immediately |
+| US-C2 | User | create custom categories | I can organize expenses my way |
+| US-C3 | User | assign icons and colors to categories | I can visually identify them quickly |
+| US-C4 | User | create subcategories | I can have more detailed organization (e.g., Food > Restaurants) |
+| US-C5 | User | rename a category | I can correct mistakes or update naming |
+| US-C6 | User | delete a category | I can remove categories I no longer need |
+| US-C7 | User | see transaction count per category | I know how each category is being used |
+
 ## Domain Model
 
 ### Category Entity

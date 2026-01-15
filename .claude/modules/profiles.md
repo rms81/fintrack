@@ -3,6 +3,17 @@
 ## Overview
 Profiles provide logical separation between Personal and Business finances within a single user account.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-P1 | User | create a Personal profile | I can track my personal expenses separately |
+| US-P2 | Freelancer | create a Business profile | I can track business income and expenses for tax purposes |
+| US-P3 | User | switch between profiles | I can view and manage different financial contexts |
+| US-P4 | User | rename my profile | I can better organize my financial data |
+| US-P5 | User | delete a profile I no longer need | I can keep my account clean |
+| US-P6 | User | have default categories seeded when creating a profile | I can start categorizing immediately |
+
 ## Domain Model
 
 ### Profile Entity
