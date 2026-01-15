@@ -161,8 +161,8 @@ public static class ProfileEndpoints
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> DeleteProfile(
         Guid id,
-        FinTrackDbContext db,
-        ICurrentUser currentUser,
+        [FromServices] FinTrackDbContext db,
+        [FromServices] ICurrentUser currentUser,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))

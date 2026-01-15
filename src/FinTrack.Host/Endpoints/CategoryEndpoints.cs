@@ -218,8 +218,8 @@ public static class CategoryEndpoints
     public static async Task<IResult> DeleteCategory(
         Guid profileId,
         Guid id,
-        FinTrackDbContext db,
-        ICurrentUser currentUser,
+        [FromServices] FinTrackDbContext db,
+        [FromServices] ICurrentUser currentUser,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
