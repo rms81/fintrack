@@ -28,6 +28,9 @@ public class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 
         builder.HasIndex(p => p.UserId);
 
+        // UserId is stored without FK to allow flexibility in testing
+        // and multi-tenant scenarios where users might be in different systems
+
         builder.HasMany(p => p.Accounts)
             .WithOne(a => a.Profile)
             .HasForeignKey(a => a.ProfileId)

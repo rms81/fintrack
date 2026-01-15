@@ -8,15 +8,75 @@ import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useRules, useCreateRule, useUpdateRule, useDeleteRule, useTestRules, useApplyRules } from '../../hooks/use-rules';
 import type { Rule, CreateRuleRequest, UpdateRuleRequest, TestRulesRequest } from '../../lib/types';
 
-const DEFAULT_RULE_TOML = `name = "New Rule"
+const RULE_TEMPLATES = [
+  {
+    name: 'Amazon Shopping',
+    toml: `name = "Amazon Shopping"
 priority = 10
 category = "Shopping"
 
 [match.description]
-contains = ["AMAZON", "amazon"]`;
+contains = ["AMAZON", "AMZN"]`,
+  },
+  {
+    name: 'Netflix Subscription',
+    toml: `name = "Netflix"
+priority = 20
+category = "Subscriptions"
+subcategory = "Streaming"
+
+[match.description]
+contains = ["NETFLIX"]`,
+  },
+  {
+    name: 'Uber/Lyft Rideshare',
+    toml: `name = "Rideshare"
+priority = 30
+category = "Transport"
+subcategory = "Rideshare"
+
+[match.description]
+contains = ["UBER", "LYFT"]`,
+  },
+  {
+    name: 'Grocery Stores',
+    toml: `name = "Groceries"
+priority = 40
+category = "Food"
+subcategory = "Groceries"
+
+[match.description]
+contains = ["WALMART", "TARGET", "COSTCO", "WHOLE FOODS", "TRADER JOE"]`,
+  },
+  {
+    name: 'Restaurant (by amount)',
+    toml: `name = "Dining Out"
+priority = 50
+category = "Food"
+subcategory = "Restaurants"
+
+[match.description]
+contains = ["RESTAURANT", "CAFE", "PIZZA", "BURGER", "DOORDASH", "GRUBHUB"]
+
+[match.amount]
+range = [-200, -5]`,
+  },
+  {
+    name: 'Salary Income',
+    toml: `name = "Salary"
+priority = 5
+category = "Income"
+subcategory = "Salary"
+
+[match.amount]
+greater_than = 1000`,
+  },
+];
+
+const DEFAULT_RULE_TOML = RULE_TEMPLATES[0].toml;
 
 export function RulesPage() {
-  const [activeProfileId] = useActiveProfile();
+  const { activeProfileId } = useActiveProfile();
   const { data: rules, isLoading } = useRules(activeProfileId ?? undefined);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -220,6 +280,30 @@ export function RulesPage() {
                     onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
                   />
                 </div>
+                {!editingRule && (
+                  <div>
+                    <Label htmlFor="template">Start from Template</Label>
+                    <select
+                      id="template"
+                      className="w-full h-10 px-3 border rounded text-sm"
+                      onChange={(e) => {
+                        const template = RULE_TEMPLATES[parseInt(e.target.value)];
+                        if (template) {
+                          setFormData({
+                            ...formData,
+                            name: template.name,
+                            ruleToml: template.toml,
+                          });
+                        }
+                      }}
+                    >
+                      <option value="">Select a template...</option>
+                      {RULE_TEMPLATES.map((t, i) => (
+                        <option key={i} value={i}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="toml">Rule TOML</Label>
                   <textarea

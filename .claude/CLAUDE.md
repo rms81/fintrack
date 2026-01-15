@@ -10,8 +10,12 @@
 
 | What | Where | Command |
 |------|-------|---------|
-| Start Backend | `src/FinTrack.Host` | `dotnet run --project src/FinTrack.Host` |
+| Start with Aspire | root | `dotnet run --project src/FinTrack.AppHost` |
+| Start Backend only | `src/FinTrack.Host` | `dotnet run --project src/FinTrack.Host` |
 | Start Frontend | `src/FinTrack.Host/ClientApp` | `pnpm dev` |
+| Build (Nuke) | root | `./build.sh compile` |
+| Test (Nuke) | root | `./build.sh test` |
+| Publish (Nuke) | root | `./build.sh publish` |
 | Test All | root | `dotnet test` |
 | Test Frontend | `src/FinTrack.Host/ClientApp` | `pnpm test` |
 | E2E Tests | `src/FinTrack.Host/ClientApp` | `pnpm e2e` |
@@ -50,6 +54,8 @@
 - **FinTrack.Host**: ASP.NET host serving React SPA + Minimal API endpoints
 - **FinTrack.Core**: Domain entities, value objects, and Wolverine handlers (vertical slices)
 - **FinTrack.Infrastructure**: EF Core DbContext, external service integrations (LLM, Rules Engine)
+- **FinTrack.AppHost**: .NET Aspire orchestrator for local development (PostgreSQL, services)
+- **FinTrack.ServiceDefaults**: Shared defaults (OpenTelemetry, health checks, resilience)
 
 ---
 
@@ -152,14 +158,25 @@ src/
 │   ├── Persistence/                  # DbContext, Configurations
 │   └── Services/                     # RulesEngine, LLM, Import
 │
-└── tests/
-    ├── FinTrack.Tests.Integration/   # API endpoint tests
-    └── FinTrack.Tests.Unit/          # Logic unit tests
+├── FinTrack.AppHost/                 # .NET Aspire orchestrator
+│   └── Program.cs                    # Service orchestration config
+│
+├── FinTrack.ServiceDefaults/         # Shared service defaults
+│   └── Extensions.cs                 # OpenTelemetry, health checks
+│
+tests/
+├── FinTrack.Tests.Integration/       # API endpoint tests
+└── FinTrack.Tests.Unit/              # Logic unit tests
+
+build/
+├── Build.cs                          # Nuke build targets
+└── _build.csproj                     # Build project
 
 docs/
 ├── SPEC.md                           # Full technical specification
 └── ARCHITECTURE.md                   # Architecture decisions
 
+.github/workflows/ci.yml              # GitHub Actions CI
 prompts/                              # Phase-specific development prompts
 .claude/commands/                     # Custom Claude Code commands
 ```
@@ -168,9 +185,17 @@ prompts/                              # Phase-specific development prompts
 
 ## Development Workflow
 
-**Daily:**
+**Daily (with Aspire - recommended):**
 ```bash
-# Start development
+# Start everything with Aspire Dashboard
+dotnet run --project src/FinTrack.AppHost
+
+# Aspire Dashboard: https://localhost:17225
+# API: https://localhost:5001
+```
+
+**Daily (without Aspire):**
+```bash
 docker compose up -d postgres        # Start database
 dotnet run --project src/FinTrack.Host &
 cd src/FinTrack.Host/ClientApp && pnpm dev
@@ -178,7 +203,7 @@ cd src/FinTrack.Host/ClientApp && pnpm dev
 
 **Before committing:**
 ```bash
-dotnet test
+./build.sh test                       # Or: dotnet test
 cd src/FinTrack.Host/ClientApp && pnpm test
 ```
 
@@ -272,8 +297,8 @@ ASPNETCORE_ENVIRONMENT=Development
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| 1 | Foundation - Auth, Profiles, Accounts | Ready to start |
-| 2 | Import & Rules - CSV, LLM detection, TOML engine | Planned |
+| 1 | Foundation - Auth, Profiles, Accounts | Complete |
+| 2 | Import & Rules - CSV, LLM detection, TOML engine | In Progress |
 | 3 | Dashboard - Transaction views, visualizations | Planned |
 | 4 | NLQ & Export - Natural language queries, data portability | Planned |
 | 5 | Polish - Error handling, performance, docs | Planned |
@@ -284,10 +309,21 @@ See `prompts/` directory for detailed phase prompts.
 
 ## Recent Changes
 
-**[Playwright E2E Tests]:**
+**[2026-01-15] Playwright E2E Tests:**
 - Added Playwright for end-to-end browser testing
 - Configured Playwright MCP server for Claude Code integration
 - Created initial E2E test structure (auth, home, profiles)
+
+**[2026-01-15] Build & DevEx:**
+- Added .NET Aspire orchestration (FinTrack.AppHost, FinTrack.ServiceDefaults)
+- Added Nuke build automation with targets: Clean, Restore, Compile, Test, Publish
+- Added GitHub Actions CI workflow for backend and frontend
+
+**[2025-01-14] Phase 1 Complete:**
+- Implemented ASP.NET Identity cookie authentication
+- Created Profile, Account, Category CRUD endpoints
+- Added Wolverine HTTP for endpoint handling
+- Set up integration tests with Testcontainers
 
 **[Initial Setup]:**
 - Created project structure and CLAUDE.md

@@ -9,15 +9,8 @@ using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
 
-/// <summary>
-/// Aspire service defaults extensions for FinTrack services.
-/// Provides OpenTelemetry, health checks, and service discovery configuration.
-/// </summary>
 public static class Extensions
 {
-    /// <summary>
-    /// Adds default Aspire services including OpenTelemetry, health checks, and service discovery.
-    /// </summary>
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
         builder.ConfigureOpenTelemetry();
@@ -25,18 +18,13 @@ public static class Extensions
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default
             http.AddStandardResilienceHandler();
-            // Turn on service discovery by default
             http.AddServiceDiscovery();
         });
 
         return builder;
     }
 
-    /// <summary>
-    /// Configures OpenTelemetry for metrics, tracing, and logging.
-    /// </summary>
     public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(logging =>
@@ -55,9 +43,6 @@ public static class Extensions
             .WithTracing(tracing =>
             {
                 tracing.AddAspNetCoreInstrumentation()
-                    // Uncomment the following line to enable gRPC instrumentation
-                    // (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
-                    // .AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation();
             });
 
@@ -78,36 +63,23 @@ public static class Extensions
         return builder;
     }
 
-    /// <summary>
-    /// Adds default health checks for the application.
-    /// </summary>
     public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
     {
         builder.Services.AddHealthChecks()
-            // Add a default liveness check to ensure app is responsive
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
         return builder;
     }
 
-    /// <summary>
-    /// Maps default health check endpoints for Kubernetes-style probes.
-    /// </summary>
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
-        // Adding health checks endpoints to applications in non-development environments has security implications.
-        // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
-        if (app.Environment.IsDevelopment())
-        {
-            // All health checks must pass for app to be considered ready to accept traffic after starting
-            app.MapHealthChecks("/health");
+        // Health check endpoints
+        app.MapHealthChecks("/health");
 
-            // Only health checks tagged with the "live" tag must pass for app to be considered alive
-            app.MapHealthChecks("/alive", new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
-        }
+        app.MapHealthChecks("/alive", new HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
 
         return app;
     }

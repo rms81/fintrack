@@ -185,8 +185,8 @@ public static class AccountEndpoints
     public static async Task<IResult> DeleteAccount(
         Guid profileId,
         Guid id,
-        FinTrackDbContext db,
-        ICurrentUser currentUser,
+        [FromServices] FinTrackDbContext db,
+        [FromServices] ICurrentUser currentUser,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))

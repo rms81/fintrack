@@ -6,6 +6,20 @@
 ## Overview
 TOML-based deterministic rules for automatic transaction categorization.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-R1 | User | create categorization rules | transactions are automatically categorized |
+| US-R2 | User | match rules by description text | I can target specific merchants or keywords |
+| US-R3 | User | match rules by amount ranges | I can categorize based on transaction size |
+| US-R4 | User | set rule priority | I can control which rule applies when multiple match |
+| US-R5 | User | test rules against sample transactions | I can verify rules work before saving |
+| US-R6 | User | apply rules to existing uncategorized transactions | historical data gets categorized |
+| US-R7 | User | enable/disable rules without deleting | I can temporarily turn off rules |
+| US-R8 | User | use rule templates | I can quickly add common categorization patterns |
+| US-R9 | User | add tags via rules | I can automatically tag transactions for grouping |
+
 ## Why TOML?
 
 - Human-readable and editable

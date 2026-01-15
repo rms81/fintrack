@@ -6,6 +6,18 @@
 ## Overview
 Allow users to query their financial data using natural language, translated to SQL via LLM.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-N1 | User | ask questions in plain English | I can get insights without learning query syntax |
+| US-N2 | User | see the generated SQL query | I can understand how my question was interpreted |
+| US-N3 | User | view results in a table or chart | I can easily understand the data |
+| US-N4 | User | re-run previous queries | I can quickly access frequent questions |
+| US-N5 | User | get query suggestions | I can discover what questions I can ask |
+| US-N6 | User | refine or modify my question | I can get more specific answers |
+| US-N7 | User | export query results | I can use the data in other tools |
+
 ## Examples
 
 | User Query | Generated SQL |

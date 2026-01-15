@@ -20,6 +20,9 @@ import {
   type ConfirmImportResponse,
   type CsvFormatConfig,
   type ImportSession,
+  type ImportFormat,
+  type CreateImportFormatRequest,
+  type UpdateImportFormatRequest,
   type Rule,
   type CreateRuleRequest,
   type UpdateRuleRequest,
@@ -228,6 +231,32 @@ export const importApi = {
 
   getSessions: (accountId: string) =>
     request<ImportSession[]>(`/accounts/${accountId}/import/sessions`),
+};
+
+// Import Format API
+export const importFormatsApi = {
+  getAll: (profileId: string) =>
+    request<ImportFormat[]>(`/profiles/${profileId}/import-formats`),
+
+  getById: (id: string) =>
+    request<ImportFormat>(`/import-formats/${id}`),
+
+  create: (profileId: string, data: CreateImportFormatRequest) =>
+    request<ImportFormat>(`/profiles/${profileId}/import-formats`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: string, data: UpdateImportFormatRequest) =>
+    request<ImportFormat>(`/import-formats/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    request<void>(`/import-formats/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Rules API

@@ -91,7 +91,7 @@ app.MapGet("/", () => "FinTrack API")
     .WithDescription("Returns the API name. Use this to verify the API is running.")
     .ExcludeFromDescription();
 
-// Map Aspire default health check endpoints (/health, /alive)
+// Map Aspire default endpoints (health checks)
 app.MapDefaultEndpoints();
 
 // Map auth endpoints

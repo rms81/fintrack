@@ -6,6 +6,21 @@
 ## Overview
 Transactions are the core data entity representing financial movements (expenses and income).
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-T1 | User | view all my transactions in a list | I can see my financial activity |
+| US-T2 | User | filter transactions by date range | I can focus on a specific time period |
+| US-T3 | User | filter transactions by category | I can see spending in specific areas |
+| US-T4 | User | filter transactions by account | I can reconcile with bank statements |
+| US-T5 | User | search transactions by description | I can find specific purchases |
+| US-T6 | User | edit a transaction's category | I can correct miscategorized items |
+| US-T7 | User | add notes to a transaction | I can remember context about a purchase |
+| US-T8 | User | add tags to transactions | I can create custom groupings across categories |
+| US-T9 | User | delete a transaction | I can remove duplicates or errors |
+| US-T10 | User | see uncategorized transactions | I can ensure all transactions are properly organized |
+
 ## Domain Model
 
 ```csharp

@@ -41,3 +41,21 @@ public record ConfirmImportRequest(
 public record ConfirmImportResponse(
     int ImportedCount,
     int SkippedDuplicates);
+
+public record ImportFormatDto(
+    Guid Id,
+    string Name,
+    string? BankName,
+    CsvFormatConfig Mapping,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+
+public record CreateImportFormatRequest(
+    string Name,
+    string? BankName,
+    CsvFormatConfig Mapping);
+
+public record UpdateImportFormatRequest(
+    string Name,
+    string? BankName,
+    CsvFormatConfig Mapping);
