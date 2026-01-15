@@ -6,7 +6,7 @@ var postgres = builder.AddPostgres("postgres")
 
 var fintrackDb = postgres.AddDatabase("fintrack");
 
-builder.AddProject("api", "../FinTrack.Host/FinTrack.Host.csproj")
+builder.AddProject("fintrack-api", "../FinTrack.Host/FinTrack.Host.csproj")
     .WithReference(fintrackDb)
     .WaitFor(fintrackDb)
     .WithExternalHttpEndpoints();
