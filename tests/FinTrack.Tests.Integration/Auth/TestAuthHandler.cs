@@ -9,7 +9,7 @@ namespace FinTrack.Tests.Integration.Auth;
 public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public const string SchemeName = "TestScheme";
-    public const string DefaultUserId = "test-user-id";
+    public static readonly string DefaultUserId = Guid.NewGuid().ToString();
     public const string DefaultUserEmail = "test@example.com";
     public const string DefaultUserName = "Test User";
 

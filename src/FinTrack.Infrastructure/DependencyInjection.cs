@@ -35,6 +35,9 @@ public static class DependencyInjection
         // Register Import Service
         services.AddScoped<IImportService, CsvImportService>();
 
+        // Register Category Seeder
+        services.AddSingleton<ICategorySeeder, CategorySeeder>();
+
         // Register LLM Service (OpenRouter or Stub)
         var llmSection = configuration.GetSection(LlmOptions.Section);
         if (llmSection.Exists() && !string.IsNullOrEmpty(llmSection["ApiKey"]))

@@ -1,9 +1,7 @@
-using System.ComponentModel;
 using FinTrack.Core.Domain.Entities;
 using FinTrack.Core.Features.Profiles;
 using FinTrack.Core.Services;
 using FinTrack.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Wolverine.Http;
@@ -18,26 +16,34 @@ public static class ProfileEndpoints
     [WolverinePost("/api/profiles")]
     [Tags("Profiles")]
     [EndpointSummary("Create a new profile")]
-    [EndpointDescription("Creates a new profile for the authenticated user. Each user can have multiple profiles (e.g., Personal, Business).")]
+    [EndpointDescription("Creates a new profile for the authenticated user. Each user can have multiple profiles (e.g., Personal, Business). Default categories are automatically created.")]
     [ProducesResponseType<ProfileDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public static async Task<IResult> CreateProfile(
         [FromBody] CreateProfileRequest request,
         FinTrackDbContext db,
         ICurrentUser currentUser,
+        ICategorySeeder categorySeeder,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
+        var profileId = Guid.NewGuid();
         var profile = new Profile
         {
+            Id = profileId,
             UserId = userId,
             Name = request.Name,
             Type = request.Type
         };
 
         db.Profiles.Add(profile);
+
+        // Seed default categories for the new profile
+        var defaultCategories = categorySeeder.GetDefaultCategories(profileId);
+        db.Categories.AddRange(defaultCategories);
+
         await db.SaveChangesAsync(ct);
 
         var result = new ProfileDto(
@@ -155,8 +161,8 @@ public static class ProfileEndpoints
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public static async Task<IResult> DeleteProfile(
         Guid id,
-        FinTrackDbContext db,
-        ICurrentUser currentUser,
+        [FromServices] FinTrackDbContext db,
+        [FromServices] ICurrentUser currentUser,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))

@@ -11,6 +11,9 @@ using Wolverine.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Aspire service defaults (OpenTelemetry, health checks, resilience)
+builder.AddServiceDefaults();
+
 // Add services to the container
 builder.Services.AddOpenApi(options =>
 {
@@ -88,11 +91,8 @@ app.MapGet("/", () => "FinTrack API")
     .WithDescription("Returns the API name. Use this to verify the API is running.")
     .ExcludeFromDescription();
 
-app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }))
-    .WithName("Health")
-    .WithTags("System")
-    .WithSummary("Health Check")
-    .WithDescription("Returns the health status of the API. Returns 200 OK if the service is healthy.");
+// Map Aspire default endpoints (health checks)
+app.MapDefaultEndpoints();
 
 // Map auth endpoints
 app.MapAuthEndpoints();

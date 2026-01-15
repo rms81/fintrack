@@ -14,6 +14,7 @@ public class FinTrackDbContext(DbContextOptions<FinTrackDbContext> options)
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<CategorizationRule> CategorizationRules => Set<CategorizationRule>();
     public DbSet<ImportSession> ImportSessions => Set<ImportSession>();
+    public DbSet<ImportFormat> ImportFormats => Set<ImportFormat>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

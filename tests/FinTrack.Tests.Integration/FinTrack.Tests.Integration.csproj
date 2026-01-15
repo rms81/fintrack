@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\FinTrack.Host\FinTrack.Host.csproj" />
     <ProjectReference Include="..\..\src\FinTrack.Core\FinTrack.Core.csproj" />
     <ProjectReference Include="..\..\src\FinTrack.Infrastructure\FinTrack.Infrastructure.csproj" />

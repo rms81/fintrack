@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FinTrack.Core\FinTrack.Core.csproj" />
     <ProjectReference Include="..\FinTrack.Infrastructure\FinTrack.Infrastructure.csproj" />
+    <ProjectReference Include="..\FinTrack.ServiceDefaults\FinTrack.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

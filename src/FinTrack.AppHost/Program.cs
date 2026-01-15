@@ -1,0 +1,14 @@
+var builder = DistributedApplication.CreateBuilder(args);
+
+var postgres = builder.AddPostgres("postgres")
+    .WithDataVolume()
+    .WithPgAdmin();
+
+var fintrackDb = postgres.AddDatabase("fintrack");
+
+builder.AddProject("api", "../FinTrack.Host/FinTrack.Host.csproj")
+    .WithReference(fintrackDb)
+    .WaitFor(fintrackDb)
+    .WithExternalHttpEndpoints();
+
+builder.Build().Run();

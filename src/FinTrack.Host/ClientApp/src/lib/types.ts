@@ -73,6 +73,7 @@ export interface Category {
   name: string;
   icon: string;
   color: string;
+  sortOrder: number;
   parentId: string | null;
   transactionCount: number;
   createdAt: string;
@@ -83,6 +84,7 @@ export interface CreateCategoryRequest {
   name: string;
   icon?: string;
   color?: string;
+  sortOrder?: number;
   parentId?: string | null;
 }
 
@@ -90,6 +92,7 @@ export interface UpdateCategoryRequest {
   name: string;
   icon: string;
   color: string;
+  sortOrder: number;
   parentId: string | null;
 }
 
@@ -194,6 +197,28 @@ export interface PreviewResponse {
 export interface ConfirmImportResponse {
   importedCount: number;
   skippedDuplicates: number;
+}
+
+// Import Format types
+export interface ImportFormat {
+  id: string;
+  name: string;
+  bankName: string | null;
+  mapping: CsvFormatConfig;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface CreateImportFormatRequest {
+  name: string;
+  bankName?: string | null;
+  mapping: CsvFormatConfig;
+}
+
+export interface UpdateImportFormatRequest {
+  name: string;
+  bankName?: string | null;
+  mapping: CsvFormatConfig;
 }
 
 // Rule types

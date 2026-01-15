@@ -1,20 +1,20 @@
 {
   "scores": {
-    "systems/development.md": 0.5220062499999999,
+    "systems/development.md": 0.85,
     "systems/production.md": 0.0,
-    "systems/database.md": 0.3521712637157225,
-    "modules/profiles.md": 0.16806999999999994,
+    "systems/database.md": 0.21627717732941804,
+    "modules/profiles.md": 0.05764800999999997,
     "modules/accounts.md": 0.0,
-    "modules/transactions.md": 0.28775390855116756,
-    "modules/categories.md": 1.8940934613283198e-06,
-    "modules/import.md": 5.4116956037952e-06,
-    "modules/rules-engine.md": 5.4116956037952e-06,
+    "modules/transactions.md": 0.34369959063305044,
+    "modules/categories.md": 6.496740572356136e-07,
+    "modules/import.md": 1.8562115921017532e-06,
+    "modules/rules-engine.md": 1.8562115921017532e-06,
     "modules/dashboard.md": 0.0,
-    "modules/nlq.md": 0.48999999999999994,
-    "modules/auth.md": 0.028247524899999984,
-    "integrations/openrouter.md": 0.6336000000000002,
-    "integrations/postgres.md": 0.06871947673600004
+    "modules/nlq.md": 0.7,
+    "modules/auth.md": 0.009688901040699992,
+    "integrations/openrouter.md": 0.6044032000000001,
+    "integrations/postgres.md": 0.03518437208883203
   },
-  "turn_count": 40,
-  "last_update": "2026-01-14T12:37:01.068907"
+  "turn_count": 43,
+  "last_update": "2026-01-15T00:21:00.141982"
 }
