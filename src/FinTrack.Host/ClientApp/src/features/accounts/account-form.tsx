@@ -68,7 +68,7 @@ export function AccountForm({ account }: AccountFormProps) {
         });
       }
       navigate('/accounts');
-    } catch (error) {
+    } catch {
       // Error is handled by TanStack Query
     }
   };
