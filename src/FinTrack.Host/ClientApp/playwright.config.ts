@@ -87,7 +87,7 @@ export default defineConfig({
     {
       /* Start the .NET backend */
       command: 'dotnet run --project ../../../FinTrack.Host.csproj --no-build',
-      url: 'http://localhost:5178/api/health',
+      url: 'http://localhost:5178/health',
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
     },
