@@ -14,6 +14,8 @@
 | Start Frontend | `src/FinTrack.Host/ClientApp` | `pnpm dev` |
 | Test All | root | `dotnet test` |
 | Test Frontend | `src/FinTrack.Host/ClientApp` | `pnpm test` |
+| E2E Tests | `src/FinTrack.Host/ClientApp` | `pnpm e2e` |
+| E2E Tests (UI) | `src/FinTrack.Host/ClientApp` | `pnpm e2e:ui` |
 | Add Migration | root | `dotnet ef migrations add <Name> -p src/FinTrack.Infrastructure -s src/FinTrack.Host` |
 | Update DB | root | `dotnet ef database update -p src/FinTrack.Infrastructure -s src/FinTrack.Host` |
 | Docker | root | `docker compose up -d` |
@@ -114,8 +116,9 @@ Cross-system communication
 
 ### Testing
 - **xUnit** for .NET tests
-- **Vitest** + **Testing Library** for React tests
-- **WebApplicationFactory** for integration tests
+- **Vitest** + **Testing Library** for React unit tests
+- **Playwright** for E2E browser tests
+- **WebApplicationFactory** for API integration tests
 - **Testcontainers** for real PostgreSQL in tests
 
 ---
@@ -133,6 +136,11 @@ src/
 │   │   │   ├── components/           # Shared UI components
 │   │   │   ├── hooks/                # Custom React hooks
 │   │   │   └── lib/                  # Utilities, API client
+│   │   ├── e2e/                      # Playwright E2E tests
+│   │   │   ├── fixtures/             # Test fixtures and utilities
+│   │   │   ├── auth.setup.ts         # Authentication setup
+│   │   │   └── *.spec.ts             # Test files
+│   │   ├── playwright.config.ts      # Playwright configuration
 │   │   └── package.json
 │   └── FinTrack.Host.csproj
 │
@@ -276,6 +284,11 @@ See `prompts/` directory for detailed phase prompts.
 
 ## Recent Changes
 
+**[Playwright E2E Tests]:**
+- Added Playwright for end-to-end browser testing
+- Configured Playwright MCP server for Claude Code integration
+- Created initial E2E test structure (auth, home, profiles)
+
 **[Initial Setup]:**
 - Created project structure and CLAUDE.md
 - Defined architecture with BFF pattern
@@ -297,6 +310,23 @@ See `prompts/` directory for detailed phase prompts.
 - `docs/ARCHITECTURE.md` - Architecture decisions
 - `prompts/` - Phase-specific development prompts
 - `.claude/commands/` - Custom Claude Code commands
+
+---
+
+## MCP Servers
+
+This project has a Playwright MCP server configured (`.claude/mcp_servers.json`) for browser automation:
+
+**Capabilities:**
+- Navigate to URLs and interact with pages
+- Take screenshots for visual debugging
+- Fill forms and click elements
+- Wait for elements and network requests
+
+**Usage in Claude Code:**
+- Run E2E tests with visual feedback
+- Debug UI issues by capturing screenshots
+- Verify UI changes before committing
 
 ---
 
@@ -323,5 +353,5 @@ If running multiple Claude Code instances on this project:
 
 ---
 
-**Last Updated:** 2025-01-14
+**Last Updated:** 2026-01-15
 **Maintained By:** Ricardo
