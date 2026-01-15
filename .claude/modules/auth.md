@@ -3,6 +3,17 @@
 ## Overview
 Cookie-based authentication using ASP.NET Core Identity, integrated directly into FinTrack.Host.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-AU1 | Visitor | register for an account with email and password | I can start tracking my expenses |
+| US-AU2 | Visitor | log in with my credentials | I can access my financial data |
+| US-AU3 | User | stay logged in across browser sessions | I don't have to log in every time |
+| US-AU4 | User | log out of my account | my data is secure on shared devices |
+| US-AU5 | User | see my account information | I can verify I'm logged into the correct account |
+| US-AU6 | User | have my session automatically extended | I'm not logged out while actively using the app |
+
 ## Architecture Decision
 Chose cookie-based auth over JWT for simplicity:
 - No token refresh logic needed

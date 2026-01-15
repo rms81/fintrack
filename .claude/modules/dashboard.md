@@ -6,6 +6,19 @@
 ## Overview
 Interactive dashboards showing spending patterns, trends, and analytics.
 
+## User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-D1 | User | see spending breakdown by category | I understand where my money goes |
+| US-D2 | User | view monthly income vs expenses trend | I can track my financial health over time |
+| US-D3 | User | see daily spending for the current month | I can monitor day-to-day spending patterns |
+| US-D4 | User | view my top merchants by spend | I know which businesses I frequent most |
+| US-D5 | User | see account balances at a glance | I have a quick overview of my finances |
+| US-D6 | User | compare spending to previous periods | I can identify changes in habits |
+| US-D7 | User | drill down into category details | I can explore specific spending areas |
+| US-D8 | User | see count of uncategorized transactions | I know how much cleanup work remains |
+
 ## Dashboard Components
 
 ### Spending by Category (Pie/Donut Chart)
