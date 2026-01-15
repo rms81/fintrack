@@ -1,63 +1,82 @@
-# FinTrack - Claude Code Development Package
+# FinTrack - Expense Tracking System
 
-This package contains all the configuration, prompts, and documentation needed to develop FinTrack using Claude Code.
+Self-hosted expense tracking for individuals and sole proprietors with multi-profile support, intelligent CSV import, rule-based categorization, and natural language querying.
 
 ## Quick Start
 
-### 1. Clone/Create Project Directory
+### With .NET Aspire (Recommended)
 
 ```bash
-mkdir fintrack && cd fintrack
-# Copy all files from this package into the directory
+# Start everything (PostgreSQL + API + Aspire Dashboard)
+dotnet run --project src/FinTrack.AppHost
 ```
 
-### 2. Open in Claude Code
+- **Aspire Dashboard**: https://localhost:17225 (traces, logs, metrics)
+- **API**: https://localhost:5001
+
+### Manual Setup
+
+```bash
+# Start PostgreSQL
+docker compose up -d postgres
+
+# Run migrations
+dotnet ef database update -p src/FinTrack.Infrastructure -s src/FinTrack.Host
+
+# Start API
+dotnet run --project src/FinTrack.Host
+
+# Start frontend (separate terminal)
+cd src/FinTrack.Host/ClientApp && pnpm dev
+```
+
+## Build System (Nuke)
+
+```bash
+./build.sh compile    # Build all projects
+./build.sh test       # Build and run tests
+./build.sh publish    # Build, test, and publish to artifacts/
+```
+
+## Claude Code Development
+
+This project is optimized for development with Claude Code.
 
 ```bash
 claude
 ```
 
-Claude Code will automatically read the `CLAUDE.md` file for project context.
+Claude Code will automatically read `.claude/CLAUDE.md` for project context.
 
-### 3. Start Development
-
-Begin with Phase 1 by running:
-
-```
-/user Read prompts/phase-1-foundation.md and start Task 1.1
-```
-
-## Package Contents
+## Project Structure
 
 ```
 fintrack-claude-code/
-├── CLAUDE.md                      # Main project context for Claude Code
+├── src/
+│   ├── FinTrack.Host/             # ASP.NET host + React SPA
+│   ├── FinTrack.Core/             # Domain + Application logic
+│   ├── FinTrack.Infrastructure/   # EF Core, External services
+│   ├── FinTrack.AppHost/          # .NET Aspire orchestrator
+│   └── FinTrack.ServiceDefaults/  # Shared service defaults
+├── tests/
+│   ├── FinTrack.Tests.Integration/
+│   └── FinTrack.Tests.Unit/
+├── build/
+│   ├── Build.cs                   # Nuke build targets
+│   └── _build.csproj
 ├── .claude/
-│   ├── settings.json              # Claude Code settings
-│   └── commands/
-│       ├── feature.md             # /feature - Create feature slice
-│       ├── component.md           # /component - Create React component
-│       ├── entity.md              # /entity - Create EF Core entity
-│       ├── test.md                # /test - Create integration tests
-│       └── rules.md               # /rules - Work with rules engine
-├── agents/
-│   ├── backend-agent.md           # Backend development specialization
-│   └── frontend-agent.md          # Frontend development specialization
-├── prompts/
-│   ├── phase-1-foundation.md      # Week 1-2: Setup, auth, profiles
-│   ├── phase-2-import-rules.md    # Week 3-4: CSV import, rules engine
-│   ├── phase-3-dashboard.md       # Week 5-6: Dashboard, visualizations
-│   ├── phase-4-nlq-export.md      # Week 7-8: NLQ, export/import
-│   └── phase-5-polish.md          # Week 9-10: Polish, optimization
+│   ├── CLAUDE.md                  # Main project context
+│   ├── commands/                  # Custom slash commands
+│   ├── modules/                   # Feature documentation
+│   ├── systems/                   # Infrastructure docs
+│   └── integrations/              # External service docs
+├── .github/workflows/ci.yml       # GitHub Actions CI
 ├── docs/
-│   ├── ARCHITECTURE.md            # Architecture decisions
-│   └── SPEC.md                    # Full technical specification
+│   ├── ARCHITECTURE.md
+│   └── SPEC.md
+├── prompts/                       # Development phase prompts
 ├── docker-compose.yml             # Production Docker Compose
-├── docker-compose.override.yml    # Development override
-├── src/FinTrack.Host/
-│   └── Dockerfile                 # Multi-stage Dockerfile
-├── init-db.sql                    # PostgreSQL initialization
-└── .env.example                   # Environment variables template
+└── build.sh / build.ps1           # Nuke build scripts
 ```
 
 ## Custom Commands
@@ -74,79 +93,34 @@ Use these commands in Claude Code for common tasks:
 
 ## Development Phases
 
-### Phase 1: Foundation (Week 1-2)
-- Solution structure
-- Docker setup
-- Authentication
-- Profile & Account CRUD
-- React shell
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 1 | Foundation - Auth, Profiles, Accounts | Complete |
+| 2 | Import & Rules - CSV, LLM detection, TOML engine | In Progress |
+| 3 | Dashboard - Transaction views, visualizations | Planned |
+| 4 | NLQ & Export - Natural language queries | Planned |
+| 5 | Polish - Error handling, performance | Planned |
 
-### Phase 2: Import & Rules (Week 3-4)
-- CSV upload
-- LLM format detection
-- Transaction import
-- TOML rules engine
-- Rule application
-
-### Phase 3: Dashboard (Week 5-6)
-- Transaction list
-- Spending charts
-- Category management
-- Date filtering
-
-### Phase 4: NLQ & Export (Week 7-8)
-- Natural language queries
-- SQL generation
-- JSON/CSV export
-- Data import
-
-### Phase 5: Polish (Week 9-10)
-- Error handling
-- Performance
-- Documentation
-- Testing
-
-## Technology Versions
+## Technology Stack
 
 | Technology | Version |
 |------------|---------|
-| .NET | 10.0 (LTS) |
+| .NET | 10.0 |
 | C# | 14 |
 | PostgreSQL | 18 |
 | React | 19 |
 | Tailwind CSS | 4.x |
 | Vite | 6.x |
 | Node.js | 22.x |
+| .NET Aspire | 9.x |
+| Nuke Build | 10.x |
 
-## Environment Setup
+## Prerequisites
 
-### Prerequisites
 - .NET 10 SDK
-- Node.js 22+
+- Node.js 22+ with pnpm
 - Docker Desktop
-- Claude Code CLI
-
-### Database
-
-```bash
-# Start PostgreSQL
-docker compose up -d db
-
-# Verify connection
-docker compose exec db psql -U fintrack -d fintrack -c "SELECT version();"
-```
-
-### Development
-
-```bash
-# Backend
-dotnet run --project src/FinTrack.Host
-
-# Frontend (separate terminal)
-cd src/FinTrack.Host/ClientApp
-npm install
-npm run dev
-```
+- (Optional) Claude Code CLI
 
 ### OpenRouter API Key
 
@@ -223,8 +197,8 @@ dotnet restore
 ### Frontend Issues
 ```bash
 cd src/FinTrack.Host/ClientApp
-rm -rf node_modules
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 ```
 
 ## Resources

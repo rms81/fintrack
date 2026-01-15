@@ -1,7 +1,7 @@
 # Development Environment
 
 ## Overview
-Local development setup for FinTrack using .NET 10, React 19, and PostgreSQL 18.
+Local development setup for FinTrack using .NET 10, React 19, PostgreSQL 18, and .NET Aspire for orchestration.
 
 ## Prerequisites
 
@@ -11,9 +11,25 @@ Local development setup for FinTrack using .NET 10, React 19, and PostgreSQL 18.
 | Node.js | 22.x LTS | https://nodejs.org |
 | pnpm | 9.x | `npm install -g pnpm` |
 | Docker | Latest | https://docker.com |
-| PostgreSQL | 18.x | Via Docker or native |
+| PostgreSQL | 18.x | Via Docker or Aspire |
 
-## Quick Start
+## Quick Start (Aspire - Recommended)
+
+```bash
+# Start everything with Aspire (PostgreSQL + API + Dashboard)
+dotnet run --project src/FinTrack.AppHost
+
+# Aspire Dashboard: https://localhost:17225
+# API: https://localhost:5001
+```
+
+Aspire automatically:
+- Starts PostgreSQL in a container
+- Configures connection strings
+- Provides OpenTelemetry traces, logs, metrics
+- Shows health status in dashboard
+
+## Quick Start (Manual)
 
 ```bash
 # 1. Start database
@@ -29,13 +45,31 @@ dotnet run --project src/FinTrack.Host
 cd src/FinTrack.Host/ClientApp && pnpm dev
 ```
 
+## Build System (Nuke)
+
+```bash
+# Build all projects
+./build.sh compile
+
+# Build and run tests
+./build.sh test
+
+# Build, test, and publish to artifacts/
+./build.sh publish
+
+# Clean build artifacts
+./build.sh clean
+```
+
 ## URLs
 
 | Service | URL | Notes |
 |---------|-----|-------|
+| Aspire Dashboard | https://localhost:17225 | Traces, logs, metrics |
 | React Dev Server | http://localhost:5173 | Vite HMR |
-| ASP.NET API | http://localhost:5000 | Backend API |
-| Swagger | http://localhost:5000/swagger | API docs |
+| ASP.NET API | https://localhost:5001 | Backend API (with Aspire) |
+| ASP.NET API | http://localhost:5000 | Backend API (standalone) |
+| Swagger/Scalar | /scalar/v1 | API docs |
 | PostgreSQL | localhost:5432 | Database |
 
 ## Environment Setup
@@ -91,7 +125,10 @@ dotnet ef database update -p src/FinTrack.Infrastructure -s src/FinTrack.Host
 
 ### Run Tests
 ```bash
-# All tests
+# All tests (via Nuke)
+./build.sh test
+
+# All tests (direct)
 dotnet test
 
 # With coverage
