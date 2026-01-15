@@ -1,5 +1,6 @@
 using FinTrack.Infrastructure.Persistence;
 using FinTrack.Tests.Integration.Auth;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,18 @@ public class FinTrackWebApplicationFactory : WebApplicationFactory<Program>, IAs
                 options.UseSnakeCaseNamingConvention();
             });
 
-            // Replace authentication with test handler
-            services.AddTestAuthentication();
+            // Add test authentication scheme
+            services.AddAuthentication()
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.SchemeName, _ => { });
+
+            // Override default authentication scheme
+            services.Configure<AuthenticationOptions>(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                options.DefaultScheme = TestAuthHandler.SchemeName;
+            });
 
             // Ensure database is created
             var sp = services.BuildServiceProvider();

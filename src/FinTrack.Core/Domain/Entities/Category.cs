@@ -6,6 +6,7 @@ public class Category : Entity
     public required string Name { get; set; }
     public string Icon { get; set; } = "folder";
     public string Color { get; set; } = "#6B7280";
+    public int SortOrder { get; set; }
     public Guid? ParentId { get; set; }
 
     public Profile? Profile { get; init; }

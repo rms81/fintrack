@@ -10,10 +10,5 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
     {
         builder.Property(u => u.DisplayName)
             .HasMaxLength(255);
-
-        builder.HasMany(u => u.Profiles)
-            .WithOne(p => p.User)
-            .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -16,7 +16,7 @@ category = "Shopping"
 contains = ["AMAZON", "amazon"]`;
 
 export function RulesPage() {
-  const [activeProfileId] = useActiveProfile();
+  const { activeProfileId } = useActiveProfile();
   const { data: rules, isLoading } = useRules(activeProfileId ?? undefined);
 
   const [isEditing, setIsEditing] = useState(false);

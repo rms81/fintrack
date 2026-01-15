@@ -11,10 +11,10 @@ export const accountKeys = {
     [...accountKeys.details(), { profileId, id }] as const,
 };
 
-export function useAccounts(profileId: string) {
+export function useAccounts(profileId: string | undefined) {
   return useQuery({
-    queryKey: accountKeys.list(profileId),
-    queryFn: () => accountsApi.getAll(profileId),
+    queryKey: accountKeys.list(profileId ?? ''),
+    queryFn: () => accountsApi.getAll(profileId!),
     enabled: !!profileId,
   });
 }

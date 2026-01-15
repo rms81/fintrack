@@ -29,12 +29,17 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .HasMaxLength(7)
             .HasDefaultValue("#6B7280");
 
+        builder.Property(c => c.SortOrder)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.Property(c => c.CreatedAt)
             .HasDefaultValueSql("now()");
 
         builder.HasIndex(c => c.ProfileId);
         builder.HasIndex(c => c.ParentId);
-        builder.HasIndex(c => new { c.ProfileId, c.Name }).IsUnique();
+        // Note: Name uniqueness is enforced at application level since subcategories
+        // with the same name can exist under different parents
 
         builder.HasOne(c => c.Parent)
             .WithMany(c => c.Children)

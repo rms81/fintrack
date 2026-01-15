@@ -51,7 +51,7 @@ public class ProfileEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetProfiles_ReturnsEmptyList_WhenNoProfiles()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
 
         // Act
         var response = await _client.GetAsync("/api/profiles");
@@ -67,7 +67,7 @@ public class ProfileEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetProfiles_ReturnsUserProfiles_WhenProfilesExist()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var request = new CreateProfileRequest("My Profile", ProfileType.Business);
         await _client.PostAsJsonAsync("/api/profiles", request);
 
@@ -86,7 +86,7 @@ public class ProfileEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetProfile_ReturnsProfile_WhenExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var createRequest = new CreateProfileRequest("Specific Profile");
         var createResponse = await _client.PostAsJsonAsync("/api/profiles", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ProfileDto>();
@@ -115,7 +115,7 @@ public class ProfileEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task UpdateProfile_ReturnsUpdated_WhenExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var createRequest = new CreateProfileRequest("Original Name");
         var createResponse = await _client.PostAsJsonAsync("/api/profiles", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ProfileDto>();
@@ -137,7 +137,7 @@ public class ProfileEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task DeleteProfile_ReturnsNoContent_WhenExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var createRequest = new CreateProfileRequest("To Delete");
         var createResponse = await _client.PostAsJsonAsync("/api/profiles", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ProfileDto>();

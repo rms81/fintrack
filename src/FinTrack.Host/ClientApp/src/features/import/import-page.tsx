@@ -1,27 +1,34 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, Loader2, Save, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useAccounts } from '../../hooks/use-accounts';
-import { useUploadCsv, usePreviewImport, useConfirmImport } from '../../hooks/use-import';
-import type { UploadResponse, PreviewResponse, CsvFormatConfig } from '../../lib/types';
+import { useUploadCsv, usePreviewImport, useConfirmImport, useImportFormats, useCreateImportFormat } from '../../hooks/use-import';
+import type { UploadResponse, PreviewResponse, ImportFormat } from '../../lib/types';
 
 type ImportStep = 'select' | 'upload' | 'preview' | 'complete';
 
 export function ImportPage() {
-  const [activeProfileId] = useActiveProfile();
+  const { activeProfileId } = useActiveProfile();
   const { data: accounts } = useAccounts(activeProfileId ?? undefined);
+  const { data: savedFormats } = useImportFormats(activeProfileId ?? undefined);
 
   const [step, setStep] = useState<ImportStep>('select');
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<ImportFormat | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
   const [previewResult, setPreviewResult] = useState<PreviewResponse | null>(null);
   const [importedCount, setImportedCount] = useState(0);
+  const [showSaveFormat, setShowSaveFormat] = useState(false);
+  const [formatName, setFormatName] = useState('');
 
   const uploadMutation = useUploadCsv();
   const previewMutation = usePreviewImport();
   const confirmMutation = useConfirmImport();
+  const createFormatMutation = useCreateImportFormat();
 
   const handleFileSelect = useCallback(async (file: File) => {
     if (!selectedAccountId) return;
@@ -33,16 +40,18 @@ export function ImportPage() {
       });
       setUploadResult(result);
 
-      // Automatically preview after upload
+      // Use selected format or detected format for preview
+      const formatOverride = selectedFormat?.mapping;
       const preview = await previewMutation.mutateAsync({
         sessionId: result.sessionId,
+        formatOverride,
       });
       setPreviewResult(preview);
       setStep('preview');
     } catch (error) {
       console.error('Upload failed:', error);
     }
-  }, [selectedAccountId, uploadMutation, previewMutation]);
+  }, [selectedAccountId, selectedFormat, uploadMutation, previewMutation]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -56,8 +65,10 @@ export function ImportPage() {
     if (!uploadResult) return;
 
     try {
+      const formatOverride = selectedFormat?.mapping;
       const result = await confirmMutation.mutateAsync({
         sessionId: uploadResult.sessionId,
+        formatOverride,
         skipDuplicates: true,
       });
       setImportedCount(result.importedCount);
@@ -67,13 +78,37 @@ export function ImportPage() {
     }
   };
 
+  const handleSaveFormat = async () => {
+    if (!activeProfileId || !uploadResult || !formatName.trim()) return;
+
+    try {
+      await createFormatMutation.mutateAsync({
+        profileId: activeProfileId,
+        data: {
+          name: formatName.trim(),
+          bankName: accounts?.find(a => a.id === selectedAccountId)?.bankName,
+          mapping: selectedFormat?.mapping ?? uploadResult.detectedFormat,
+        },
+      });
+      setShowSaveFormat(false);
+      setFormatName('');
+    } catch (error) {
+      console.error('Failed to save format:', error);
+    }
+  };
+
   const resetImport = () => {
     setStep('select');
     setSelectedAccountId(null);
+    setSelectedFormat(null);
     setUploadResult(null);
     setPreviewResult(null);
     setImportedCount(0);
+    setShowSaveFormat(false);
+    setFormatName('');
   };
+
+  const currentFormat = selectedFormat?.mapping ?? uploadResult?.detectedFormat;
 
   if (!activeProfileId) {
     return (
@@ -143,51 +178,95 @@ export function ImportPage() {
 
       {/* Step 2: Upload CSV */}
       {step === 'upload' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload CSV File</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors"
-            >
-              {uploadMutation.isPending ? (
-                <div className="flex flex-col items-center">
-                  <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-                  <p className="mt-4 text-sm text-gray-600">Analyzing CSV...</p>
+        <div className="space-y-6">
+          {/* Saved Formats */}
+          {savedFormats && savedFormats.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Use Saved Format (Optional)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedFormat(null)}
+                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      selectedFormat === null
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    Auto-detect
+                  </button>
+                  {savedFormats.map(format => (
+                    <button
+                      key={format.id}
+                      onClick={() => setSelectedFormat(format)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex items-center gap-2 ${
+                        selectedFormat?.id === format.id
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <FileText className="h-4 w-4" />
+                      {format.name}
+                      {format.bankName && (
+                        <span className="text-xs text-gray-500">({format.bankName})</span>
+                      )}
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <>
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto" />
-                  <p className="mt-4 text-sm text-gray-600">
-                    Drag and drop your CSV file here, or
-                  </p>
-                  <label className="mt-2 inline-block">
-                    <input
-                      type="file"
-                      accept=".csv"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileSelect(file);
-                      }}
-                    />
-                    <span className="cursor-pointer text-blue-600 hover:underline">
-                      browse to select
-                    </span>
-                  </label>
-                </>
-              )}
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" onClick={() => setStep('select')}>
-                Back
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload CSV File</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors"
+              >
+                {uploadMutation.isPending ? (
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                    <p className="mt-4 text-sm text-gray-600">
+                      {selectedFormat ? 'Processing CSV...' : 'Analyzing CSV...'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto" />
+                    <p className="mt-4 text-sm text-gray-600">
+                      Drag and drop your CSV file here, or
+                    </p>
+                    <label className="mt-2 inline-block">
+                      <input
+                        type="file"
+                        accept=".csv"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileSelect(file);
+                        }}
+                      />
+                      <span className="cursor-pointer text-blue-600 hover:underline">
+                        browse to select
+                      </span>
+                    </label>
+                  </>
+                )}
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button variant="outline" onClick={() => setStep('select')}>
+                  Back
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Step 3: Preview */}
@@ -204,14 +283,70 @@ export function ImportPage() {
           <CardContent>
             {/* Format Info */}
             <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm">
-              <div className="font-medium mb-2">Detected Format:</div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-gray-600">
-                <div>Delimiter: <span className="font-mono">{uploadResult.detectedFormat.delimiter === '\t' ? 'Tab' : uploadResult.detectedFormat.delimiter}</span></div>
-                <div>Date Format: <span className="font-mono">{uploadResult.detectedFormat.dateFormat}</span></div>
-                <div>Has Header: {uploadResult.detectedFormat.hasHeader ? 'Yes' : 'No'}</div>
-                <div>Amount Type: {uploadResult.detectedFormat.amountType}</div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">
+                  {selectedFormat ? `Using: ${selectedFormat.name}` : 'Detected Format:'}
+                </span>
+                {!showSaveFormat && !selectedFormat && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSaveFormat(true)}
+                    className="h-7 text-xs"
+                  >
+                    <Save className="h-3 w-3 mr-1" />
+                    Save Format
+                  </Button>
+                )}
               </div>
+              {currentFormat && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-gray-600">
+                  <div>Delimiter: <span className="font-mono">{currentFormat.delimiter === '\t' ? 'Tab' : currentFormat.delimiter}</span></div>
+                  <div>Date Format: <span className="font-mono">{currentFormat.dateFormat}</span></div>
+                  <div>Has Header: {currentFormat.hasHeader ? 'Yes' : 'No'}</div>
+                  <div>Amount Type: {currentFormat.amountType}</div>
+                </div>
+              )}
             </div>
+
+            {/* Save Format Form */}
+            {showSaveFormat && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="formatName" className="text-sm">Format Name</Label>
+                    <Input
+                      id="formatName"
+                      value={formatName}
+                      onChange={(e) => setFormatName(e.target.value)}
+                      placeholder="e.g., My Bank Statement"
+                      className="h-9"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveFormat}
+                    disabled={!formatName.trim() || createFormatMutation.isPending}
+                  >
+                    {createFormatMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Save'
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowSaveFormat(false);
+                      setFormatName('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Duplicate Warning */}
             {previewResult.duplicateCount > 0 && (
@@ -306,9 +441,12 @@ export function ImportPage() {
                 <Button variant="outline" onClick={resetImport}>
                   Import More
                 </Button>
-                <Button asChild>
-                  <a href="/">View Dashboard</a>
-                </Button>
+                <a
+                  href="/"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 shadow-sm h-10 px-4 py-2"
+                >
+                  View Dashboard
+                </a>
               </div>
             </div>
           </CardContent>

@@ -53,6 +53,7 @@ public static class CategoryEndpoints
             Name = request.Name,
             Icon = request.Icon,
             Color = request.Color,
+            SortOrder = request.SortOrder,
             ParentId = request.ParentId
         };
 
@@ -64,6 +65,7 @@ public static class CategoryEndpoints
             category.Name,
             category.Icon,
             category.Color,
+            category.SortOrder,
             category.ParentId,
             0,
             category.CreatedAt,
@@ -96,12 +98,14 @@ public static class CategoryEndpoints
 
         var categories = await db.Categories
             .Where(c => c.ProfileId == profileId)
-            .OrderBy(c => c.Name)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
             .Select(c => new CategoryDto(
                 c.Id,
                 c.Name,
                 c.Icon,
                 c.Color,
+                c.SortOrder,
                 c.ParentId,
                 c.Transactions.Count,
                 c.CreatedAt,
@@ -135,6 +139,7 @@ public static class CategoryEndpoints
                 c.Name,
                 c.Icon,
                 c.Color,
+                c.SortOrder,
                 c.ParentId,
                 c.Transactions.Count,
                 c.CreatedAt,
@@ -182,6 +187,7 @@ public static class CategoryEndpoints
         category.Name = request.Name;
         category.Icon = request.Icon;
         category.Color = request.Color;
+        category.SortOrder = request.SortOrder;
         category.ParentId = request.ParentId;
 
         await db.SaveChangesAsync(ct);
@@ -193,6 +199,7 @@ public static class CategoryEndpoints
             category.Name,
             category.Icon,
             category.Color,
+            category.SortOrder,
             category.ParentId,
             transactionCount,
             category.CreatedAt,

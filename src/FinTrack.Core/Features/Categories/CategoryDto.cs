@@ -5,6 +5,7 @@ public record CategoryDto(
     string Name,
     string Icon,
     string Color,
+    int SortOrder,
     Guid? ParentId,
     int TransactionCount,
     DateTime CreatedAt,
@@ -14,12 +15,14 @@ public record CreateCategoryRequest(
     string Name,
     string Icon = "folder",
     string Color = "#6B7280",
+    int SortOrder = 0,
     Guid? ParentId = null);
 
 public record UpdateCategoryRequest(
     string Name,
     string Icon,
     string Color,
+    int SortOrder,
     Guid? ParentId);
 
 public record CreateCategory(Guid ProfileId, string Name, string Icon, string Color, Guid? ParentId);

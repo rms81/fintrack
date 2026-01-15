@@ -27,7 +27,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task CreateAccount_ReturnsCreated_WhenProfileExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         var request = new CreateAccountRequest("Checking Account", "Chase Bank", "USD");
 
@@ -60,7 +60,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task CreateAccount_DefaultsToEUR_WhenCurrencyNotSpecified()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         var request = new CreateAccountRequest("Savings");
 
@@ -76,7 +76,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetAccounts_ReturnsEmpty_WhenNoAccounts()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
 
         // Act
@@ -93,7 +93,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetAccounts_ReturnsAccounts_WhenExist()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         await _client.PostAsJsonAsync($"/api/profiles/{profile.Id}/accounts",
             new CreateAccountRequest("Account 1"));
@@ -112,7 +112,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetAccount_ReturnsAccount_WhenExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         var createResponse = await _client.PostAsJsonAsync($"/api/profiles/{profile.Id}/accounts",
             new CreateAccountRequest("My Account"));
@@ -131,7 +131,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task GetAccount_ReturnsNotFound_WhenNotExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
 
         // Act
@@ -145,7 +145,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task UpdateAccount_ReturnsUpdated_WhenExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         var createResponse = await _client.PostAsJsonAsync($"/api/profiles/{profile.Id}/accounts",
             new CreateAccountRequest("Original"));
@@ -169,7 +169,7 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task DeleteAccount_ReturnsNoContent_WhenExists()
     {
         // Arrange
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         var createResponse = await _client.PostAsJsonAsync($"/api/profiles/{profile.Id}/accounts",
             new CreateAccountRequest("To Delete"));
@@ -190,14 +190,14 @@ public class AccountEndpointsTests : IClassFixture<FinTrackWebApplicationFactory
     public async Task Account_NotAccessible_FromOtherUsersProfile()
     {
         // Arrange - Create account with user 1
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var profile = await CreateTestProfile();
         var createResponse = await _client.PostAsJsonAsync($"/api/profiles/{profile.Id}/accounts",
             new CreateAccountRequest("Private Account"));
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         // Act - Try to access with user 2
-        TestAuthHandler.TestUserId = $"user-{Guid.NewGuid()}";
+        TestAuthHandler.TestUserId = Guid.NewGuid().ToString();
         var response = await _client.GetAsync($"/api/profiles/{profile.Id}/accounts/{created!.Id}");
 
         // Assert

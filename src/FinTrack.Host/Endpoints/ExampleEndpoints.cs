@@ -1,4 +1,5 @@
 using FinTrack.Core.Features.Example;
+using Microsoft.AspNetCore.Mvc;
 using Wolverine.Http;
 
 namespace FinTrack.Host.Endpoints;
