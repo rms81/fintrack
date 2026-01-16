@@ -31,7 +31,7 @@ export function AskPage() {
     const uniqueCurrencies = new Set(
       accounts
         .map(account => account.currency)
-        .filter(Boolean),
+        .filter((c): c is string => Boolean(c)),
     );
 
     if (uniqueCurrencies.size === 1) {
