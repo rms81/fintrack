@@ -303,42 +303,43 @@ export const rulesApi = {
 };
 
 // Dashboard API
+const buildDashboardQuery = (filter: DashboardFilter = {}, extraParams?: Record<string, string>): string => {
+  const params = new URLSearchParams();
+
+  if (filter.accountId) params.set('accountId', filter.accountId);
+  if (filter.fromDate) params.set('fromDate', filter.fromDate);
+  if (filter.toDate) params.set('toDate', filter.toDate);
+
+  if (extraParams) {
+    for (const [key, value] of Object.entries(extraParams)) {
+      if (value !== undefined && value !== null) {
+        params.set(key, value);
+      }
+    }
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
+
 export const dashboardApi = {
   getSummary: (profileId: string, filter: DashboardFilter = {}) => {
-    const params = new URLSearchParams();
-    if (filter.accountId) params.set('accountId', filter.accountId);
-    if (filter.fromDate) params.set('fromDate', filter.fromDate);
-    if (filter.toDate) params.set('toDate', filter.toDate);
-    const query = params.toString();
-    return request<DashboardSummary>(`/profiles/${profileId}/dashboard/summary${query ? `?${query}` : ''}`);
+    const query = buildDashboardQuery(filter);
+    return request<DashboardSummary>(`/profiles/${profileId}/dashboard/summary${query}`);
   },
 
   getSpendingByCategory: (profileId: string, filter: DashboardFilter = {}) => {
-    const params = new URLSearchParams();
-    if (filter.accountId) params.set('accountId', filter.accountId);
-    if (filter.fromDate) params.set('fromDate', filter.fromDate);
-    if (filter.toDate) params.set('toDate', filter.toDate);
-    const query = params.toString();
-    return request<CategorySpending[]>(`/profiles/${profileId}/dashboard/spending-by-category${query ? `?${query}` : ''}`);
+    const query = buildDashboardQuery(filter);
+    return request<CategorySpending[]>(`/profiles/${profileId}/dashboard/spending-by-category${query}`);
   },
 
   getSpendingOverTime: (profileId: string, filter: DashboardFilter = {}, granularity = 'month') => {
-    const params = new URLSearchParams();
-    if (filter.accountId) params.set('accountId', filter.accountId);
-    if (filter.fromDate) params.set('fromDate', filter.fromDate);
-    if (filter.toDate) params.set('toDate', filter.toDate);
-    params.set('granularity', granularity);
-    const query = params.toString();
-    return request<SpendingOverTime[]>(`/profiles/${profileId}/dashboard/spending-over-time${query ? `?${query}` : ''}`);
+    const query = buildDashboardQuery(filter, { granularity });
+    return request<SpendingOverTime[]>(`/profiles/${profileId}/dashboard/spending-over-time${query}`);
   },
 
   getTopMerchants: (profileId: string, filter: DashboardFilter = {}, limit = 10) => {
-    const params = new URLSearchParams();
-    if (filter.accountId) params.set('accountId', filter.accountId);
-    if (filter.fromDate) params.set('fromDate', filter.fromDate);
-    if (filter.toDate) params.set('toDate', filter.toDate);
-    params.set('limit', limit.toString());
-    const query = params.toString();
-    return request<TopMerchant[]>(`/profiles/${profileId}/dashboard/top-merchants${query ? `?${query}` : ''}`);
+    const query = buildDashboardQuery(filter, { limit: limit.toString() });
+    return request<TopMerchant[]>(`/profiles/${profileId}/dashboard/top-merchants${query}`);
   },
 };
