@@ -52,7 +52,7 @@ export function DashboardPage() {
 
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary(activeProfileId ?? undefined, filter);
   const { data: categorySpending, isLoading: categoryLoading } = useSpendingByCategory(activeProfileId ?? undefined, filter);
-  const { data: spendingOverTime, isLoading: timeLoading } = useSpendingOverTime(activeProfileId ?? undefined, {}, 'month');
+  const { data: spendingOverTime, isLoading: timeLoading } = useSpendingOverTime(activeProfileId ?? undefined, filter, 'month');
   const { data: topMerchants, isLoading: merchantsLoading } = useTopMerchants(activeProfileId ?? undefined, filter, 5);
   const { data: recentTransactions } = useTransactions(activeProfileId ?? undefined, { pageSize: 5 });
 
