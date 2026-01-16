@@ -65,17 +65,6 @@ public record CsvExportOptions(
     Guid? AccountId = null,
     Guid? CategoryId = null);
 
-// CSV Export row
-public record TransactionCsvRow(
-    DateOnly Date,
-    string Description,
-    decimal Amount,
-    string? Category,
-    string? Subcategory,
-    string Tags,
-    string Account,
-    string? Notes);
-
 // JSON Import - Preview and confirm
 public record JsonImportPreviewResponse(
     string ProfileName,
