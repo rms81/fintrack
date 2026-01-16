@@ -191,7 +191,7 @@ public static class DashboardEndpoints
             return Results.NotFound();
 
         var now = DateOnly.FromDateTime(DateTime.UtcNow);
-        var from = fromDate ?? now.AddMonths(-11).AddDays(1 - now.Day); // Default to last 12 months
+        var from = fromDate ?? new DateOnly(now.Year - 1, now.Month, 1); // Default to last 12 months
         var to = toDate ?? now;
 
         var query = db.Transactions
