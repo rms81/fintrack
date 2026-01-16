@@ -20,7 +20,8 @@ import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useAccounts } from '../../hooks/use-accounts';
 import { useCategories } from '../../hooks/use-categories';
 import { useTransactions, useUpdateTransaction, useDeleteTransaction } from '../../hooks/use-transactions';
-import type { TransactionFilter, Transaction, Category } from '../../lib/types';
+import type { TransactionFilter, Transaction, Category, Account } from '../../lib/types';
+import { formatCurrency } from '../../lib/utils';
 
 const PAGE_SIZE = 20;
 
@@ -45,6 +46,11 @@ export function TransactionsPage() {
     if (!categories) return new Map<string, Category>();
     return new Map(categories.map(c => [c.id, c]));
   }, [categories]);
+
+  const accountMap = useMemo(() => {
+    if (!accounts) return new Map<string, Account>();
+    return new Map(accounts.map(a => [a.id, a]));
+  }, [accounts]);
 
   const handleFilterChange = (key: keyof TransactionFilter, value: string | number | boolean | undefined) => {
     setFilter(prev => ({
@@ -394,8 +400,7 @@ export function TransactionsPage() {
                         <td className={`px-4 py-3 text-right font-mono whitespace-nowrap ${
                           tx.amount < 0 ? 'text-red-600' : 'text-green-600'
                         }`}>
-                          {tx.amount < 0 ? '-' : '+'}
-                          {Math.abs(tx.amount).toFixed(2)}
+                          {formatCurrency(tx.amount, accountMap.get(tx.accountId)?.currency ?? 'EUR')}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
