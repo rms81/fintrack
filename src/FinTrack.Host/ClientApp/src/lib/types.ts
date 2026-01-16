@@ -339,3 +339,47 @@ export interface NlqResponse {
   chartType: string | null;
   errorMessage: string | null;
 }
+
+// Export types
+export interface JsonExportOptions {
+  fromDate?: string;
+  toDate?: string;
+  includeRules?: boolean;
+  includeFormats?: boolean;
+}
+
+export interface CsvExportOptions {
+  fromDate?: string;
+  toDate?: string;
+  accountId?: string;
+  categoryId?: string;
+}
+
+// Import types (JSON profile import)
+export interface JsonImportPreviewResponse {
+  sessionId: string;
+  profileName: string;
+  profileType: ProfileType;
+  accountCount: number;
+  categoryCount: number;
+  ruleCount: number;
+  importFormatCount: number;
+  transactionCount: number;
+  warnings: string[];
+}
+
+export interface JsonImportConfirmRequest {
+  sessionId: string;
+  profileName: string;
+  importRules?: boolean;
+  importFormats?: boolean;
+}
+
+export interface JsonImportResult {
+  newProfileId: string;
+  accountsCreated: number;
+  categoriesCreated: number;
+  rulesCreated: number;
+  formatsCreated: number;
+  transactionsCreated: number;
+}

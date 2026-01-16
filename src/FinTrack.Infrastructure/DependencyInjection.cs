@@ -41,6 +41,9 @@ public static class DependencyInjection
         // Register NLQ Service
         services.AddScoped<INlqService, NlqService>();
 
+        // Register Export Service
+        services.AddScoped<IExportService, ExportService>();
+
         // Register LLM Service (OpenRouter or Stub)
         var llmSection = configuration.GetSection(LlmOptions.Section);
         if (llmSection.Exists() && !string.IsNullOrEmpty(llmSection["ApiKey"]))
