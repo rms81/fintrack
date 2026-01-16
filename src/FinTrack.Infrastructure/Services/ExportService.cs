@@ -55,10 +55,12 @@ public class ExportService(
                 .ToListAsync(ct)
             : [];
 
-        var accountIds = accounts.Select(a => a.Id).ToList();
-        var transactionsQuery = db.Transactions
-            .AsNoTracking()
-            .Where(t => accountIds.Contains(t.AccountId));
+        var transactionsQuery =
+            from t in db.Transactions.AsNoTracking()
+            join a in db.Accounts.AsNoTracking()
+                on t.AccountId equals a.Id
+            where a.ProfileId == profileId
+            select t;
 
         if (options.FromDate.HasValue)
             transactionsQuery = transactionsQuery.Where(t => t.Date >= options.FromDate.Value);
@@ -95,18 +97,12 @@ public class ExportService(
         CsvExportOptions options,
         CancellationToken ct = default)
     {
-        var accountIds = await db.Accounts
-            .AsNoTracking()
-            .Where(a => a.ProfileId == profileId)
-            .Select(a => a.Id)
-            .ToListAsync(ct);
-
         var query = db.Transactions
             .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .ThenInclude(c => c!.Parent)
-            .Where(t => accountIds.Contains(t.AccountId));
+            .Where(t => t.Account!.ProfileId == profileId);
 
         if (options.FromDate.HasValue)
             query = query.Where(t => t.Date >= options.FromDate.Value);
@@ -131,8 +127,27 @@ public class ExportService(
 
         foreach (var t in transactions)
         {
-            var category = t.Category?.Name;
-            var subcategory = t.Category?.Parent?.Name;
+            string? category = null;
+            string? subcategory = null;
+
+            if (t.Category is { } cat)
+            {
+                if (cat.Parent is { } parent)
+                {
+                    // Transaction is assigned to a subcategory:
+                    // Category column -> parent name, Subcategory column -> child name
+                    category = parent.Name;
+                    subcategory = cat.Name;
+                }
+                else
+                {
+                    // Transaction is assigned to a top-level category:
+                    // Category column -> category name, Subcategory column -> empty
+                    category = cat.Name;
+                    subcategory = null;
+                }
+            }
+
             var tags = string.Join(";", t.Tags);
             var account = t.Account?.Name;
 
@@ -318,19 +333,17 @@ public class ExportService(
             var formatsCreated = 0;
             if (options.ImportFormats)
             {
-                foreach (var f in data.ImportFormats)
+                var formats = data.ImportFormats.Select(f => new ImportFormat
                 {
-                    var format = new ImportFormat
-                    {
-                        Id = Guid.CreateVersion7(),
-                        ProfileId = profile.Id,
-                        Name = f.Name,
-                        BankName = f.BankName,
-                        Mapping = f.Mapping
-                    };
-                    db.ImportFormats.Add(format);
-                    formatsCreated++;
-                }
+                    Id = Guid.CreateVersion7(),
+                    ProfileId = profile.Id,
+                    Name = f.Name,
+                    BankName = f.BankName,
+                    Mapping = f.Mapping
+                }).ToList();
+
+                db.ImportFormats.AddRange(formats);
+                formatsCreated = formats.Count;
                 await db.SaveChangesAsync(ct);
             }
 
@@ -338,20 +351,18 @@ public class ExportService(
             var rulesCreated = 0;
             if (options.ImportRules)
             {
-                foreach (var r in data.Rules)
+                var rules = data.Rules.Select(r => new CategorizationRule
                 {
-                    var rule = new CategorizationRule
-                    {
-                        Id = Guid.CreateVersion7(),
-                        ProfileId = profile.Id,
-                        Name = r.Name,
-                        Priority = r.Priority,
-                        RuleToml = r.RuleToml,
-                        IsActive = r.IsActive
-                    };
-                    db.CategorizationRules.Add(rule);
-                    rulesCreated++;
-                }
+                    Id = Guid.CreateVersion7(),
+                    ProfileId = profile.Id,
+                    Name = r.Name,
+                    Priority = r.Priority,
+                    RuleToml = r.RuleToml,
+                    IsActive = r.IsActive
+                }).ToList();
+
+                db.CategorizationRules.AddRange(rules);
+                rulesCreated = rules.Count;
                 await db.SaveChangesAsync(ct);
             }
 
