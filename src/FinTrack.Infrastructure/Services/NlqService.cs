@@ -205,7 +205,8 @@ public class NlqService(
             return "No SQL query was generated";
 
         // Check for SQL comments that could be used to bypass validation
-        if (sql.Contains("--") || sql.Contains("/*") || sql.Contains("*/"))
+        // Check for both single-line (--) and block comments (/* */)
+        if (sql.Contains("--") || sql.Contains("/*"))
         {
             return "SQL comments are not allowed in queries";
         }
@@ -237,7 +238,8 @@ public class NlqService(
 
         // Check for multiple statements (semicolons that could indicate SQL injection)
         var trimmedSql = sql.Trim();
-        if (trimmedSql.Contains(';') && !trimmedSql.EndsWith(';'))
+        var lastSemicolonIndex = trimmedSql.LastIndexOf(';');
+        if (lastSemicolonIndex >= 0 && lastSemicolonIndex < trimmedSql.Length - 1)
         {
             return "Multiple SQL statements are not allowed";
         }
