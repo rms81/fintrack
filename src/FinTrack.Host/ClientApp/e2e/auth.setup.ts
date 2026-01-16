@@ -17,7 +17,7 @@ setup('authenticate', async ({ page, request }) => {
     },
   });
 
-  // 200/201 = created, 400/409 = already exists (both are fine)
+  // 200 = OK, 201 = Created (user registered); 400/409 = already exists (all acceptable for setup)
   if (registerResponse.status() !== 200 && registerResponse.status() !== 201 && registerResponse.status() !== 400 && registerResponse.status() !== 409) {
     console.warn(`Registration returned unexpected status: ${registerResponse.status()}`);
   }
