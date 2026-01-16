@@ -10,6 +10,8 @@ import { formatCurrency } from '../../lib/utils';
 
 type NlqHistoryItem = NlqResponse & { id: string };
 
+const DEFAULT_CURRENCY = 'EUR';
+
 export function AskPage() {
   const { activeProfileId } = useActiveProfile();
   const { data: accounts } = useAccounts(activeProfileId ?? '');
@@ -23,7 +25,7 @@ export function AskPage() {
   // Derive currency from accounts: use a single shared currency if all accounts agree, otherwise default to EUR
   const currency = useMemo(() => {
     if (!accounts || accounts.length === 0) {
-      return 'EUR';
+      return DEFAULT_CURRENCY;
     }
 
     const uniqueCurrencies = new Set(
@@ -37,7 +39,7 @@ export function AskPage() {
     }
 
     // Multiple different account currencies; fall back to a neutral default
-    return 'EUR';
+    return DEFAULT_CURRENCY;
   }, [accounts]);
 
   const handleSubmit = (e: React.FormEvent) => {
