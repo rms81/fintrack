@@ -322,3 +322,20 @@ export class ApiError extends Error {
     this.details = details;
   }
 }
+
+// NLQ types
+export type NlqResultType = 'Scalar' | 'Table' | 'Chart' | 'Error';
+
+export interface NlqRequest {
+  question: string;
+}
+
+export interface NlqResponse {
+  question: string;
+  generatedSql: string | null;
+  resultType: NlqResultType;
+  data: unknown;
+  explanation: string | null;
+  chartType: string | null;
+  errorMessage: string | null;
+}
