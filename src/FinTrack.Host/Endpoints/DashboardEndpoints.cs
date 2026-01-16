@@ -145,7 +145,7 @@ public static class DashboardEndpoints
 
         var categoryGroups = await query
             .GroupBy(t => new {
-                CategoryId = t.CategoryId,
+                CategoryId = t.CategoryId ?? Guid.Empty,
                 CategoryName = t.Category != null ? t.Category.Name : "Uncategorized",
                 CategoryColor = t.Category != null ? t.Category.Color : "#9CA3AF"
             })
@@ -176,7 +176,7 @@ public static class DashboardEndpoints
     [WolverineGet("/api/profiles/{profileId}/dashboard/spending-over-time")]
     [Tags("Dashboard")]
     [EndpointSummary("Get spending over time")]
-    [EndpointDescription("Returns income and expenses aggregated by time period (day, week, or month).")]
+    [EndpointDescription("Returns income and expenses aggregated by time period (day, week, or month). For weekly grouping, weekStartDay parameter controls the first day of the week (0=Sunday, 1=Monday, etc.). Defaults to Sunday (0).")]
     [ProducesResponseType<List<SpendingOverTimeDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -188,6 +188,7 @@ public static class DashboardEndpoints
         FinTrackDbContext db = null!,
         ICurrentUser currentUser = null!,
         [FromQuery] string granularity = "month", // day, week, month
+        [FromQuery] int weekStartDay = 0, // 0=Sunday, 1=Monday, ..., 6=Saturday
         CancellationToken ct = default)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -214,12 +215,17 @@ public static class DashboardEndpoints
             .Select(t => new { t.Date, t.Amount })
             .ToListAsync(ct);
 
+        // Validate and clamp weekStartDay to valid range (0-6)
+        weekStartDay = Math.Clamp(weekStartDay, 0, 6);
+
         // Group by granularity
         var grouped = granularity.ToLower() switch
         {
             "day" => transactions.GroupBy(t => t.Date),
             "week" => transactions.GroupBy(t => {
-                var diff = (int)t.Date.DayOfWeek;
+                // Calculate days from the configured week start day
+                var currentDayOfWeek = (int)t.Date.DayOfWeek;
+                var diff = (currentDayOfWeek - weekStartDay + 7) % 7;
                 return t.Date.AddDays(-diff);
             }),
             _ => transactions.GroupBy(t => new DateOnly(t.Date.Year, t.Date.Month, 1))
