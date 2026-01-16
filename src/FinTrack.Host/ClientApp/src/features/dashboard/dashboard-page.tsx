@@ -193,7 +193,7 @@ export function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={categorySpending}
+                      data={categorySpending.map(c => ({ ...c }))}
                       dataKey="amount"
                       nameKey="categoryName"
                       cx="50%"
@@ -201,9 +201,10 @@ export function DashboardPage() {
                       innerRadius={60}
                       outerRadius={90}
                       paddingAngle={2}
-                      label={({ categoryName, percentage }) =>
-                        percentage > 5 ? `${categoryName} (${percentage.toFixed(0)}%)` : ''
-                      }
+                      label={(props) => {
+                        const entry = props.payload as { categoryName: string; percentage: number };
+                        return entry.percentage > 5 ? `${entry.categoryName} (${entry.percentage.toFixed(0)}%)` : '';
+                      }}
                       labelLine={false}
                     >
                       {categorySpending.map((entry, index) => (
@@ -211,7 +212,7 @@ export function DashboardPage() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number) => formatCurrency(value, currency)}
+                      formatter={(value) => formatCurrency(Number(value), currency)}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -241,7 +242,7 @@ export function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" fontSize={12} />
                     <YAxis fontSize={12} tickFormatter={(v) => `${v >= 1000 ? (v/1000).toFixed(0) + 'k' : v}`} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value), currency)} />
                     <Legend />
                     <Area
                       type="monotone"
