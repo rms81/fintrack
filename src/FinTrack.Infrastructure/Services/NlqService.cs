@@ -22,6 +22,10 @@ public class NlqService(
         ";"
     ];
 
+    private static readonly Regex TransactionsTablePattern = new(
+        @"\b(FROM|JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|INNER\s+JOIN|OUTER\s+JOIN)\s+(""?transactions""?)\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public async Task<NlqResponse> ExecuteQueryAsync(
         Guid profileId,
         string question,
@@ -29,6 +33,12 @@ public class NlqService(
     {
         try
         {
+            // Get valid account IDs for this profile
+            var validAccountIds = await db.Accounts
+                .Where(a => a.ProfileId == profileId)
+                .Select(a => a.Id)
+                .ToListAsync(ct);
+
             // Build schema context with profile-specific data
             var schemaContext = await BuildSchemaContextAsync(profileId, ct);
 
@@ -38,8 +48,8 @@ public class NlqService(
             // Parse LLM response
             var parsed = ParseLlmResponse(llmResponse);
 
-            // Validate SQL for safety
-            var validationError = ValidateSql(parsed.Sql, profileId);
+            // Validate SQL for safety and verify account_id filtering
+            var validationError = ValidateSql(parsed.Sql);
             if (validationError != null)
             {
                 return new NlqResponse(
@@ -52,8 +62,8 @@ public class NlqService(
                     validationError);
             }
 
-            // Execute the query
-            var (resultType, data) = await ExecuteSqlAsync(parsed.Sql, profileId, ct);
+            // Execute the query with enforced row-level security
+            var (resultType, data) = await ExecuteSqlAsync(parsed.Sql, validAccountIds, ct);
 
             return new NlqResponse(
                 question,
@@ -199,7 +209,7 @@ public class NlqService(
         };
     }
 
-    private static string? ValidateSql(string sql, Guid profileId)
+    private static string? ValidateSql(string sql)
     {
         if (string.IsNullOrWhiteSpace(sql))
             return "No SQL query was generated";
@@ -244,18 +254,29 @@ public class NlqService(
             return "Multiple SQL statements are not allowed";
         }
 
+        // Check for SQL comment injection attempts (both line and block comments)
+        if (Regex.IsMatch(sql, @"--|\*/|/\*", RegexOptions.None))
+        {
+            return "SQL comments are not allowed in queries";
+        }
+
         return null;
     }
 
     private async Task<(NlqResultType, object?)> ExecuteSqlAsync(
         string sql,
-        Guid profileId,
+        List<Guid> validAccountIds,
         CancellationToken ct)
     {
+        // Enforce row-level security by wrapping the query with a filtered subquery
+        // This ensures that even if the LLM-generated SQL is missing the account_id filter,
+        // we programmatically enforce it at query execution time
+        var (securedSql, parameters) = EnforceRowLevelSecurity(sql, validAccountIds);
+
         // Add LIMIT if not present
-        if (!sql.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
+        if (!securedSql.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
         {
-            sql = sql.TrimEnd().TrimEnd(';') + " LIMIT 100";
+            securedSql = securedSql.TrimEnd().TrimEnd(';') + " LIMIT 100";
         }
 
         try
@@ -265,8 +286,17 @@ public class NlqService(
             await connection.OpenAsync(ct);
 
             await using var command = connection.CreateCommand();
-            command.CommandText = sql;
+            command.CommandText = securedSql;
             command.CommandTimeout = 30;
+
+            // Add parameters to prevent SQL injection
+            foreach (var (name, value) in parameters)
+            {
+                var param = command.CreateParameter();
+                param.ParameterName = name;
+                param.Value = value;
+                command.Parameters.Add(param);
+            }
 
             await using var reader = await command.ExecuteReaderAsync(ct);
 
@@ -303,5 +333,34 @@ public class NlqService(
             logger.LogError(ex, "Failed to execute NLQ SQL: {Sql}", sql);
             throw new InvalidOperationException($"Query execution failed: {ex.Message}");
         }
+    }
+
+    private static (string sql, Dictionary<string, object> parameters) EnforceRowLevelSecurity(
+        string sql, 
+        List<Guid> validAccountIds)
+    {
+        // Check if the SQL references the transactions table (in FROM or JOIN clauses)
+        if (!TransactionsTablePattern.IsMatch(sql))
+        {
+            return (sql, new Dictionary<string, object>());
+        }
+
+        // Use a parameter for the account IDs array to prevent SQL injection
+        var parameters = new Dictionary<string, object>
+        {
+            ["@authorized_account_ids"] = validAccountIds.ToArray()
+        };
+
+        // Wrap the query to enforce account filtering using a subquery with a parameter
+        // This ensures that even if the LLM-generated SQL is missing the account_id filter,
+        // we programmatically enforce it by wrapping all transaction table references
+        // The regex matches both FROM and JOIN clauses and replaces them with a filtered subquery
+        var securedSql = TransactionsTablePattern.Replace(sql, match =>
+        {
+            var joinType = match.Groups[1].Value; // FROM, JOIN, LEFT JOIN, etc.
+            return $"{joinType} (SELECT * FROM transactions WHERE account_id = ANY(@authorized_account_ids)) AS transactions";
+        });
+
+        return (securedSql, parameters);
     }
 }
