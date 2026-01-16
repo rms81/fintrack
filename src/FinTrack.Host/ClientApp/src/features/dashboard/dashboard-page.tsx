@@ -75,14 +75,17 @@ export function DashboardPage() {
     // Multiple different account currencies; fall back to a neutral default
     return 'EUR';
   }, [accounts]);
+  // Use the user's browser locale when available; fall back to environment default
+  const userLocale = typeof navigator !== 'undefined' ? navigator.language : undefined;
+
   // Format chart data for spending over time
   const chartData = useMemo(() => {
     if (!spendingOverTime) return [];
     return spendingOverTime.map(item => ({
       ...item,
-      month: new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      month: new Date(item.date).toLocaleDateString(userLocale, { month: 'short', year: '2-digit' }),
     }));
-  }, [spendingOverTime]);
+  }, [spendingOverTime, userLocale]);
 
   if (!activeProfileId) {
     return (
