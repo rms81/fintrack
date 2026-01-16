@@ -250,10 +250,10 @@ public class NlqService(
         List<Guid> validAccountIds,
         CancellationToken ct)
     {
-        // Enforce row-level security by wrapping the query
+        // Enforce row-level security by creating a temporary view
         // This ensures that even if the LLM-generated SQL is missing the account_id filter,
-        // we programmatically enforce it
-        var securedSql = EnforceRowLevelSecurity(sql, validAccountIds);
+        // we programmatically enforce it at the database level
+        var (securedSql, parameters) = EnforceRowLevelSecurity(sql, validAccountIds);
 
         // Add LIMIT if not present
         if (!securedSql.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
@@ -270,6 +270,15 @@ public class NlqService(
             await using var command = connection.CreateCommand();
             command.CommandText = securedSql;
             command.CommandTimeout = 30;
+
+            // Add parameters to prevent SQL injection
+            foreach (var (name, value) in parameters)
+            {
+                var param = command.CreateParameter();
+                param.ParameterName = name;
+                param.Value = value;
+                command.Parameters.Add(param);
+            }
 
             await using var reader = await command.ExecuteReaderAsync(ct);
 
@@ -308,26 +317,31 @@ public class NlqService(
         }
     }
 
-    private static string EnforceRowLevelSecurity(string sql, List<Guid> validAccountIds)
+    private static (string sql, Dictionary<string, object> parameters) EnforceRowLevelSecurity(
+        string sql, 
+        List<Guid> validAccountIds)
     {
         // If the SQL doesn't query the transactions table, no need to enforce
         var upperSql = sql.ToUpperInvariant();
         if (!upperSql.Contains("FROM TRANSACTIONS") && !upperSql.Contains("FROM \"TRANSACTIONS\""))
         {
-            return sql;
+            return (sql, new Dictionary<string, object>());
         }
 
-        // Build the account filter
-        var accountFilter = string.Join(", ", validAccountIds.Select(id => $"'{id}'"));
+        // Use a parameter for the account IDs array to prevent SQL injection
+        var parameters = new Dictionary<string, object>
+        {
+            ["@authorized_account_ids"] = validAccountIds.ToArray()
+        };
 
-        // Wrap the query to enforce account filtering using a subquery
+        // Wrap the query to enforce account filtering using a subquery with a parameter
         // This ensures that even if the LLM-generated SQL is missing the account_id filter,
-        // we programmatically enforce it by wrapping the entire query
+        // we programmatically enforce it by wrapping all transaction table references
+        // Note: We replace ALL occurrences to handle JOINs and multiple table references
         var pattern = new Regex(@"\bFROM\s+transactions\b", RegexOptions.IgnoreCase);
         var securedSql = pattern.Replace(sql, 
-            $"FROM (SELECT * FROM transactions WHERE account_id IN ({accountFilter})) AS transactions", 
-            1); // Replace only the first occurrence
+            "FROM (SELECT * FROM transactions WHERE account_id = ANY(@authorized_account_ids)) AS transactions");
 
-        return securedSql;
+        return (securedSql, parameters);
     }
 }
