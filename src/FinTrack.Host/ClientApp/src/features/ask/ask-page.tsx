@@ -10,7 +10,7 @@ import { formatCurrency } from '../../lib/utils';
 export function AskPage() {
   const { activeProfileId } = useActiveProfile();
   const [question, setQuestion] = useState('');
-  const [showSql, setShowSql] = useState(false);
+  const [showSql, setShowSql] = useState<Record<number, boolean>>({});
   const [history, setHistory] = useState<NlqResponse[]>([]);
 
   const { mutate: executeQuery, isPending } = useNlqQuery(activeProfileId ?? undefined);
@@ -119,13 +119,13 @@ export function AskPage() {
                     {result.generatedSql && (
                       <div>
                         <button
-                          onClick={() => setShowSql(!showSql)}
+                          onClick={() => setShowSql((prev) => ({ ...prev, [index]: !prev[index] }))}
                           className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
                         >
                           <Code className="h-4 w-4" />
-                          {showSql ? 'Hide SQL' : 'Show SQL'}
+                          {showSql[index] ? 'Hide SQL' : 'Show SQL'}
                         </button>
-                        {showSql && (
+                        {showSql[index] && (
                           <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
                             {result.generatedSql}
                           </pre>
