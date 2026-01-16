@@ -378,7 +378,7 @@ export function TransactionsPage() {
                                 setEditingTransaction(tx);
                                 setSelectedCategoryId(tx.categoryId);
                               }}
-                              className="flex items-center gap-1 text-left hover:text-blue-600 transition-colors"
+                              className="group flex items-center gap-1 text-left hover:text-blue-600 transition-colors"
                             >
                               {tx.categoryId ? (
                                 <span
