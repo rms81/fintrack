@@ -28,6 +28,11 @@ import {
   type UpdateRuleRequest,
   type TestRulesRequest,
   type TestRulesResponse,
+  type DashboardSummary,
+  type CategorySpending,
+  type SpendingOverTime,
+  type TopMerchant,
+  type DashboardFilter,
   type ProblemDetails,
   ApiError,
 } from './types';
@@ -295,4 +300,46 @@ export const rulesApi = {
       method: 'POST',
       body: JSON.stringify({ onlyUncategorized }),
     }),
+};
+
+// Dashboard API
+const buildDashboardQuery = (filter: DashboardFilter = {}, extraParams?: Record<string, string>): string => {
+  const params = new URLSearchParams();
+
+  if (filter.accountId) params.set('accountId', filter.accountId);
+  if (filter.fromDate) params.set('fromDate', filter.fromDate);
+  if (filter.toDate) params.set('toDate', filter.toDate);
+
+  if (extraParams) {
+    for (const [key, value] of Object.entries(extraParams)) {
+      if (value !== undefined && value !== null) {
+        params.set(key, value);
+      }
+    }
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
+
+export const dashboardApi = {
+  getSummary: (profileId: string, filter: DashboardFilter = {}) => {
+    const query = buildDashboardQuery(filter);
+    return request<DashboardSummary>(`/profiles/${profileId}/dashboard/summary${query}`);
+  },
+
+  getSpendingByCategory: (profileId: string, filter: DashboardFilter = {}) => {
+    const query = buildDashboardQuery(filter);
+    return request<CategorySpending[]>(`/profiles/${profileId}/dashboard/spending-by-category${query}`);
+  },
+
+  getSpendingOverTime: (profileId: string, filter: DashboardFilter = {}, granularity = 'month') => {
+    const query = buildDashboardQuery(filter, { granularity });
+    return request<SpendingOverTime[]>(`/profiles/${profileId}/dashboard/spending-over-time${query}`);
+  },
+
+  getTopMerchants: (profileId: string, filter: DashboardFilter = {}, limit = 10) => {
+    const query = buildDashboardQuery(filter, { limit: limit.toString() });
+    return request<TopMerchant[]>(`/profiles/${profileId}/dashboard/top-merchants${query}`);
+  },
 };
