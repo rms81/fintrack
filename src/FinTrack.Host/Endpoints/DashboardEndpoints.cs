@@ -136,7 +136,7 @@ public static class DashboardEndpoints
 
         var categoryGroups = await query
             .GroupBy(t => new {
-                CategoryId = t.CategoryId,
+                CategoryId = t.CategoryId ?? Guid.Empty,
                 CategoryName = t.Category != null ? t.Category.Name : "Uncategorized",
                 CategoryColor = t.Category != null ? t.Category.Color : "#9CA3AF"
             })
@@ -285,9 +285,9 @@ public static class DashboardEndpoints
         if (accountId.HasValue)
             query = query.Where(t => t.AccountId == accountId.Value);
 
-        // Group by normalized description (uppercase, trimmed)
+        // Group by normalized description using database-computed column
         var merchants = await query
-            .GroupBy(t => t.Description.ToUpper().Trim())
+            .GroupBy(t => EF.Property<string>(t, "NormalizedDescription"))
             .Select(g => new {
                 Merchant = g.Key,
                 TotalAmount = Math.Abs(g.Sum(t => t.Amount)),
