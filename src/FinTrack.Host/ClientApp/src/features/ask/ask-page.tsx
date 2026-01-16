@@ -14,7 +14,7 @@ const DEFAULT_CURRENCY = 'EUR';
 
 export function AskPage() {
   const { activeProfileId } = useActiveProfile();
-  const { data: accounts } = useAccounts(activeProfileId ?? '');
+  const { data: accounts } = useAccounts(activeProfileId ?? undefined);
   const [question, setQuestion] = useState('');
   const [showSql, setShowSql] = useState<Record<string, boolean>>({});
   const [history, setHistory] = useState<NlqHistoryItem[]>([]);
@@ -31,7 +31,7 @@ export function AskPage() {
     const uniqueCurrencies = new Set(
       accounts
         .map(account => account.currency)
-        .filter((c): c is string => Boolean(c)),
+        .filter(Boolean),
     );
 
     if (uniqueCurrencies.size === 1) {
