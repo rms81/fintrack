@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router';
 import {
   LayoutDashboard,
   CreditCard,
+  Receipt,
   Upload,
   Filter,
   PieChart,
@@ -19,6 +20,7 @@ interface SidebarProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Accounts', href: '/accounts', icon: CreditCard },
+  { name: 'Transactions', href: '/transactions', icon: Receipt },
   { name: 'Import', href: '/import', icon: Upload },
   { name: 'Rules', href: '/rules', icon: Filter },
   { name: 'Reports', href: '/reports', icon: PieChart },

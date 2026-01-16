@@ -7,6 +7,7 @@ import { DashboardPage } from './features/dashboard';
 import { AccountsPage, NewAccountPage, EditAccountPage } from './features/accounts';
 import { ProfilesPage, NewProfilePage, EditProfilePage } from './features/profiles';
 import { ImportPage } from './features/import';
+import { TransactionsPage } from './features/transactions';
 import { RulesPage } from './features/rules';
 import { ReportsPage } from './features/reports';
 import { SettingsPage } from './features/settings';
@@ -46,6 +47,7 @@ function App() {
             <Route path="accounts/:id" element={<EditAccountPage />} />
             <Route path="profiles" element={<ProfilesPage />} />
             <Route path="profiles/:id/settings" element={<EditProfilePage />} />
+            <Route path="transactions" element={<TransactionsPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="rules" element={<RulesPage />} />
             <Route path="reports" element={<ReportsPage />} />
