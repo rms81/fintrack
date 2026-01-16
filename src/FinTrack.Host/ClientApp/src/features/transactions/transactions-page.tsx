@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import {
   Search,
@@ -36,10 +36,23 @@ export function TransactionsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; transactionId: string | null; description: string | null }>({
+    show: false,
+    transactionId: null,
+    description: null,
+  });
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const { data: transactionPage, isLoading, error } = useTransactions(activeProfileId ?? undefined, filter);
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
+
+  // Focus the dialog when it opens
+  useEffect(() => {
+    if (deleteConfirm.show && dialogRef.current) {
+      dialogRef.current.focus();
+    }
+  }, [deleteConfirm.show]);
 
   const categoryMap = useMemo(() => {
     if (!categories) return new Map<string, Category>();
@@ -80,11 +93,12 @@ export function TransactionsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm.transactionId) return;
 
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteConfirm.transactionId);
+      setDeleteConfirm({ show: false, transactionId: null, description: null });
     } catch (error) {
       console.error('Failed to delete transaction:', error);
     }
@@ -421,7 +435,7 @@ export function TransactionsPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => handleDelete(tx.id)}
+                              onClick={() => setDeleteConfirm({ show: true, transactionId: tx.id, description: tx.description })}
                               disabled={deleteMutation.isPending}
                               title="Delete"
                             >
@@ -469,6 +483,52 @@ export function TransactionsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm.show && (
+        <>
+          <div 
+            className="fixed inset-0 z-50 bg-gray-900/50"
+            onClick={() => setDeleteConfirm({ show: false, transactionId: null, description: null })}
+            role="presentation"
+          />
+          <div 
+            ref={dialogRef}
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-xl"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setDeleteConfirm({ show: false, transactionId: null, description: null });
+              }
+            }}
+            tabIndex={-1}
+          >
+            <h3 id="delete-dialog-title" className="text-lg font-semibold">Delete Transaction</h3>
+            <p id="delete-dialog-description" className="mt-2 text-sm text-gray-500">
+              Are you sure you want to delete this transaction{deleteConfirm.description ? ` "${deleteConfirm.description}"` : ''}? This action cannot be undone.
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirm({ show: false, transactionId: null, description: null })}
+                disabled={deleteMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
