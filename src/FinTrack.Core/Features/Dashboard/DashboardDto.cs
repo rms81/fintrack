@@ -12,7 +12,7 @@ public record DashboardSummaryDto(
     decimal? ExpenseChangePercentage);
 
 public record CategorySpendingDto(
-    Guid CategoryId,
+    Guid? CategoryId,
     string CategoryName,
     string CategoryColor,
     decimal Amount,

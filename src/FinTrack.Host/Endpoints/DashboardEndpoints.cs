@@ -46,15 +46,24 @@ public static class DashboardEndpoints
         if (accountId.HasValue)
             query = query.Where(t => t.AccountId == accountId.Value);
 
-        var transactions = await query
-            .Select(t => new { t.Amount, t.CategoryId })
-            .ToListAsync(ct);
+        // Aggregate all transactions in a single database query
+        // Using GroupBy(1) is a standard pattern to aggregate all records without loading them into memory
+        var summaryData = await query
+            .GroupBy(t => 1)
+            .Select(g => new
+            {
+                TotalIncome = g.Where(t => t.Amount > 0).Sum(t => t.Amount),
+                TotalExpenses = Math.Abs(g.Where(t => t.Amount < 0).Sum(t => t.Amount)),
+                TransactionCount = g.Count(),
+                UncategorizedCount = g.Count(t => t.CategoryId == null)
+            })
+            .FirstOrDefaultAsync(ct);
 
-        var totalIncome = transactions.Where(t => t.Amount > 0).Sum(t => t.Amount);
-        var totalExpenses = Math.Abs(transactions.Where(t => t.Amount < 0).Sum(t => t.Amount));
+        var totalIncome = summaryData?.TotalIncome ?? 0;
+        var totalExpenses = summaryData?.TotalExpenses ?? 0;
         var netBalance = totalIncome - totalExpenses;
-        var transactionCount = transactions.Count;
-        var uncategorizedCount = transactions.Count(t => t.CategoryId == null);
+        var transactionCount = summaryData?.TransactionCount ?? 0;
+        var uncategorizedCount = summaryData?.UncategorizedCount ?? 0;
 
         // Get top spending category
         var topCategory = await query
