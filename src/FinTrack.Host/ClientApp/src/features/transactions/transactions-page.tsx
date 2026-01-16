@@ -292,14 +292,20 @@ export function TransactionsPage() {
             <>
               {/* Transaction Table */}
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" aria-label="Transactions table">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left font-medium">Date</th>
-                      <th className="px-4 py-3 text-left font-medium">Description</th>
-                      <th className="px-4 py-3 text-left font-medium">Category</th>
-                      <th className="px-4 py-3 text-right font-medium">Amount</th>
-                      <th className="px-4 py-3 text-center font-medium w-24">Actions</th>
+                      <th scope="col" className="px-4 py-3 text-left font-medium">Date</th>
+                      <th scope="col" className="px-4 py-3 text-left font-medium">Description</th>
+                      <th scope="col" className="px-4 py-3 text-left font-medium">Category</th>
+                      <th scope="col" className="px-4 py-3 text-right font-medium">Amount</th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center font-medium w-24"
+                        aria-label="Transaction actions"
+                      >
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
