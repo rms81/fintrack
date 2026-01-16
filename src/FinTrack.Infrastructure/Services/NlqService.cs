@@ -23,7 +23,7 @@ public class NlqService(
     ];
 
     private static readonly Regex TransactionsTablePattern = new(
-        @"\bFROM\s+(""?transactions""?)\b",
+        @"\b(FROM|JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|INNER\s+JOIN|OUTER\s+JOIN)\s+(""?transactions""?)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public async Task<NlqResponse> ExecuteQueryAsync(
@@ -49,7 +49,7 @@ public class NlqService(
             var parsed = ParseLlmResponse(llmResponse);
 
             // Validate SQL for safety and verify account_id filtering
-            var validationError = ValidateSql(parsed.Sql, validAccountIds);
+            var validationError = ValidateSql(parsed.Sql);
             if (validationError != null)
             {
                 return new NlqResponse(
@@ -209,7 +209,7 @@ public class NlqService(
         };
     }
 
-    private static string? ValidateSql(string sql, List<Guid> validAccountIds)
+    private static string? ValidateSql(string sql)
     {
         if (string.IsNullOrWhiteSpace(sql))
             return "No SQL query was generated";
@@ -246,9 +246,9 @@ public class NlqService(
         List<Guid> validAccountIds,
         CancellationToken ct)
     {
-        // Enforce row-level security by creating a temporary view
+        // Enforce row-level security by wrapping the query with a filtered subquery
         // This ensures that even if the LLM-generated SQL is missing the account_id filter,
-        // we programmatically enforce it at the database level
+        // we programmatically enforce it at query execution time
         var (securedSql, parameters) = EnforceRowLevelSecurity(sql, validAccountIds);
 
         // Add LIMIT if not present
@@ -317,9 +317,8 @@ public class NlqService(
         string sql, 
         List<Guid> validAccountIds)
     {
-        // If the SQL doesn't query the transactions table, no need to enforce
-        var upperSql = sql.ToUpperInvariant();
-        if (!upperSql.Contains("FROM TRANSACTIONS") && !upperSql.Contains("FROM \"TRANSACTIONS\""))
+        // Check if the SQL references the transactions table (in FROM or JOIN clauses)
+        if (!TransactionsTablePattern.IsMatch(sql))
         {
             return (sql, new Dictionary<string, object>());
         }
@@ -333,9 +332,12 @@ public class NlqService(
         // Wrap the query to enforce account filtering using a subquery with a parameter
         // This ensures that even if the LLM-generated SQL is missing the account_id filter,
         // we programmatically enforce it by wrapping all transaction table references
-        // Note: We replace ALL occurrences to handle JOINs and multiple table references
-        var securedSql = TransactionsTablePattern.Replace(sql, 
-            "FROM (SELECT * FROM transactions WHERE account_id = ANY(@authorized_account_ids)) AS transactions");
+        // The regex matches both FROM and JOIN clauses and replaces them with a filtered subquery
+        var securedSql = TransactionsTablePattern.Replace(sql, match =>
+        {
+            var joinType = match.Groups[1].Value; // FROM, JOIN, LEFT JOIN, etc.
+            return $"{joinType} (SELECT * FROM transactions WHERE account_id = ANY(@authorized_account_ids)) AS transactions";
+        });
 
         return (securedSql, parameters);
     }
