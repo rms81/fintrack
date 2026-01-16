@@ -90,11 +90,14 @@ setup('authenticate', async ({ page, request }) => {
       const profilesResponse = await page.request.get('/api/profiles');
       if (profilesResponse.ok()) {
         const profiles = await profilesResponse.json();
-        if (profiles && profiles.length > 0) {
-          // Set the first profile as active
-          await page.evaluate((profileId: string) => {
-            window.localStorage.setItem('fintrack-active-profile', profileId);
-          }, profiles[0].id);
+        if (Array.isArray(profiles) && profiles.length > 0) {
+          const firstProfile = profiles[0] as { id?: unknown };
+          if (firstProfile && typeof firstProfile.id === 'string') {
+            // Set the first profile as active
+            await page.evaluate((profileId: string) => {
+              window.localStorage.setItem('fintrack-active-profile', profileId);
+            }, firstProfile.id);
+          }
         }
       }
     }
