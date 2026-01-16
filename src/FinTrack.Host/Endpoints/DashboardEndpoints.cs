@@ -46,9 +46,10 @@ public static class DashboardEndpoints
         if (accountId.HasValue)
             query = query.Where(t => t.AccountId == accountId.Value);
 
-        // Single aggregation query to get all summary data
+        // Aggregate all transactions in a single database query
+        // Using GroupBy(1) is a standard pattern to aggregate all records without loading them into memory
         var summaryData = await query
-            .GroupBy(t => 1) // Group all records together
+            .GroupBy(t => 1)
             .Select(g => new
             {
                 TotalIncome = g.Where(t => t.Amount > 0).Sum(t => t.Amount),
