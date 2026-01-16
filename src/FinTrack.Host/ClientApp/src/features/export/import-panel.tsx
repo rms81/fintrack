@@ -14,6 +14,22 @@ const ProfileTypeLabels: Record<number, string> = {
   1: 'Business',
 };
 
+function getErrorMessage(error: unknown, defaultMessage: string): string {
+  const anyError = error as any;
+  // Prefer Problem Details fields if available.
+  if (anyError?.response?.data) {
+    const data = anyError.response.data;
+    if (typeof data.title === 'string' && data.title.trim().length > 0) {
+      return data.title;
+    } else if (typeof data.detail === 'string' && data.detail.trim().length > 0) {
+      return data.detail;
+    }
+  } else if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+  return defaultMessage;
+}
+
 export function ImportPanel() {
   const [step, setStep] = useState<ImportStep>('upload');
   const [previewData, setPreviewData] = useState<JsonImportPreviewResponse | null>(null);
@@ -33,20 +49,7 @@ export function ImportPanel() {
       setStep('preview');
     } catch (error) {
       console.error('Preview failed:', error);
-      // Try to surface a helpful error message to the user.
-      let message = 'Failed to parse file. Make sure it\'s a valid FinTrack JSON export.';
-      const anyError = error as any;
-      // Prefer Problem Details fields if available.
-      if (anyError?.response?.data) {
-        const data = anyError.response.data;
-        if (typeof data.title === 'string' && data.title.trim().length > 0) {
-          message = data.title;
-        } else if (typeof data.detail === 'string' && data.detail.trim().length > 0) {
-          message = data.detail;
-        }
-      } else if (error instanceof Error && error.message.trim().length > 0) {
-        message = error.message;
-      }
+      const message = getErrorMessage(error, 'Failed to parse file. Make sure it\'s a valid FinTrack JSON export.');
       window.alert(message);
     }
   }, [previewMutation]);
@@ -73,20 +76,7 @@ export function ImportPanel() {
       setStep('complete');
     } catch (error) {
       console.error('Import failed:', error);
-      // Try to surface a helpful error message to the user.
-      let message = 'Import failed.';
-      const anyError = error as any;
-      // Prefer Problem Details fields if available.
-      if (anyError?.response?.data) {
-        const data = anyError.response.data;
-        if (typeof data.title === 'string' && data.title.trim().length > 0) {
-          message = data.title;
-        } else if (typeof data.detail === 'string' && data.detail.trim().length > 0) {
-          message = data.detail;
-        }
-      } else if (error instanceof Error && error.message.trim().length > 0) {
-        message = error.message;
-      }
+      const message = getErrorMessage(error, 'Import failed.');
       window.alert(message);
     }
   };
