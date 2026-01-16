@@ -258,6 +258,49 @@ export interface TestRulesResponse {
   tags: string[];
 }
 
+// Dashboard types
+export interface DashboardSummary {
+  totalIncome: number;
+  totalExpenses: number;
+  netBalance: number;
+  transactionCount: number;
+  uncategorizedCount: number;
+  topCategoryName: string | null;
+  topCategoryAmount: number | null;
+  previousPeriodExpenses: number | null;
+  expenseChangePercentage: number | null;
+}
+
+export interface CategorySpending {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+}
+
+export interface SpendingOverTime {
+  date: string;
+  income: number;
+  expenses: number;
+  net: number;
+}
+
+export interface TopMerchant {
+  merchant: string;
+  totalAmount: number;
+  transactionCount: number;
+  lastTransactionDate: string;
+  mostCommonCategory: string | null;
+}
+
+export interface DashboardFilter {
+  accountId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
 // API Error types
 export interface ProblemDetails {
   type?: string;
