@@ -56,9 +56,25 @@ export function DashboardPage() {
   const { data: topMerchants, isLoading: merchantsLoading } = useTopMerchants(activeProfileId ?? undefined, filter, 5);
   const { data: recentTransactions } = useTransactions(activeProfileId ?? undefined, { pageSize: 5 });
 
-  // Get currency from first account or default to EUR
-  const currency = accounts?.[0]?.currency ?? 'EUR';
+  // Derive currency from accounts: use a single shared currency if all accounts agree, otherwise default to EUR
+  const currency = useMemo(() => {
+    if (!accounts || accounts.length === 0) {
+      return 'EUR';
+    }
 
+    const uniqueCurrencies = new Set(
+      accounts
+        .map(account => account.currency)
+        .filter((c): c is string => Boolean(c)),
+    );
+
+    if (uniqueCurrencies.size === 1) {
+      return Array.from(uniqueCurrencies)[0];
+    }
+
+    // Multiple different account currencies; fall back to a neutral default
+    return 'EUR';
+  }, [accounts]);
   // Format chart data for spending over time
   const chartData = useMemo(() => {
     if (!spendingOverTime) return [];
