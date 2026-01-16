@@ -7,11 +7,13 @@ import { useNlqQuery, useNlqSuggestions } from '../../hooks/use-nlq';
 import type { NlqResponse } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
 
+type NlqHistoryItem = NlqResponse & { id: string };
+
 export function AskPage() {
   const { activeProfileId } = useActiveProfile();
   const [question, setQuestion] = useState('');
-  const [showSql, setShowSql] = useState<Record<number, boolean>>({});
-  const [history, setHistory] = useState<NlqResponse[]>([]);
+  const [showSql, setShowSql] = useState<Record<string, boolean>>({});
+  const [history, setHistory] = useState<NlqHistoryItem[]>([]);
 
   const { mutate: executeQuery, isPending } = useNlqQuery(activeProfileId ?? undefined);
   const { data: suggestions } = useNlqSuggestions(activeProfileId ?? undefined);
@@ -22,7 +24,7 @@ export function AskPage() {
 
     executeQuery(question, {
       onSuccess: (result) => {
-        setHistory((prev) => [result, ...prev]);
+        setHistory((prev) => [{ ...result, id: crypto.randomUUID() }, ...prev]);
         setQuestion('');
       },
     });
@@ -73,9 +75,9 @@ export function AskPage() {
             {suggestions && suggestions.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 <Lightbulb className="h-4 w-4 text-yellow-500 mt-1" />
-                {suggestions.map((suggestion, i) => (
+                {suggestions.map((suggestion) => (
                   <button
-                    key={i}
+                    key={suggestion}
                     type="button"
                     onClick={() => handleSuggestionClick(suggestion)}
                     className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700"
@@ -92,8 +94,8 @@ export function AskPage() {
       {/* Results */}
       {history.length > 0 && (
         <div className="space-y-4">
-          {history.map((result, index) => (
-            <Card key={index}>
+          {history.map((result) => (
+            <Card key={result.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium text-gray-700">
                   {result.question}
@@ -119,13 +121,13 @@ export function AskPage() {
                     {result.generatedSql && (
                       <div>
                         <button
-                          onClick={() => setShowSql((prev) => ({ ...prev, [index]: !prev[index] }))}
+                          onClick={() => setShowSql((prev) => ({ ...prev, [result.id]: !prev[result.id] }))}
                           className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
                         >
                           <Code className="h-4 w-4" />
-                          {showSql[index] ? 'Hide SQL' : 'Show SQL'}
+                          {showSql[result.id] ? 'Hide SQL' : 'Show SQL'}
                         </button>
-                        {showSql[index] && (
+                        {showSql[result.id] && (
                           <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
                             {result.generatedSql}
                           </pre>
@@ -195,15 +197,21 @@ function NlqResultDisplay({ result }: { result: NlqResponse }) {
             </tr>
           </thead>
           <tbody>
-            {rows.slice(0, 20).map((row, i) => (
-              <tr key={i} className="border-b last:border-0">
-                {columns.map((col) => (
-                  <td key={col} className="py-2 px-3">
-                    {formatCellValue(row[col])}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {rows.slice(0, 20).map((row, i) => {
+              // Create a stable key by hashing the first few column values + index
+              // This is more efficient than JSON.stringify for large objects
+              const keyValues = columns.slice(0, 3).map(col => String(row[col] ?? '')).join('|');
+              const rowKey = `${keyValues}-${i}`;
+              return (
+                <tr key={rowKey} className="border-b last:border-0">
+                  {columns.map((col) => (
+                    <td key={col} className="py-2 px-3">
+                      {formatCellValue(row[col])}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {rows.length > 20 && (
