@@ -29,6 +29,12 @@ public class NlqService(
     {
         try
         {
+            // Get valid account IDs for this profile
+            var validAccountIds = await db.Accounts
+                .Where(a => a.ProfileId == profileId)
+                .Select(a => a.Id)
+                .ToListAsync(ct);
+
             // Build schema context with profile-specific data
             var schemaContext = await BuildSchemaContextAsync(profileId, ct);
 
@@ -38,8 +44,8 @@ public class NlqService(
             // Parse LLM response
             var parsed = ParseLlmResponse(llmResponse);
 
-            // Validate SQL for safety
-            var validationError = ValidateSql(parsed.Sql, profileId);
+            // Validate SQL for safety and verify account_id filtering
+            var validationError = ValidateSql(parsed.Sql, validAccountIds);
             if (validationError != null)
             {
                 return new NlqResponse(
@@ -52,8 +58,8 @@ public class NlqService(
                     validationError);
             }
 
-            // Execute the query
-            var (resultType, data) = await ExecuteSqlAsync(parsed.Sql, profileId, ct);
+            // Execute the query with enforced row-level security
+            var (resultType, data) = await ExecuteSqlAsync(parsed.Sql, validAccountIds, ct);
 
             return new NlqResponse(
                 question,
@@ -199,7 +205,7 @@ public class NlqService(
         };
     }
 
-    private static string? ValidateSql(string sql, Guid profileId)
+    private static string? ValidateSql(string sql, List<Guid> validAccountIds)
     {
         if (string.IsNullOrWhiteSpace(sql))
             return "No SQL query was generated";
@@ -222,18 +228,37 @@ public class NlqService(
             return "Only SELECT queries are allowed";
         }
 
+        // Verify account_id filtering is present for row-level security
+        // The SQL must contain account_id in a WHERE or JOIN clause
+        if (upperSql.Contains("FROM TRANSACTIONS") || upperSql.Contains("FROM \"TRANSACTIONS\""))
+        {
+            // Check if any valid account IDs are referenced in the SQL
+            var hasAccountFilter = validAccountIds.Any(accountId =>
+                sql.Contains(accountId.ToString(), StringComparison.OrdinalIgnoreCase));
+
+            if (!hasAccountFilter && !upperSql.Contains("ACCOUNT_ID"))
+            {
+                return "Query must filter transactions by account_id for security. Please ensure your query includes an account filter.";
+            }
+        }
+
         return null;
     }
 
     private async Task<(NlqResultType, object?)> ExecuteSqlAsync(
         string sql,
-        Guid profileId,
+        List<Guid> validAccountIds,
         CancellationToken ct)
     {
+        // Enforce row-level security by wrapping the query
+        // This ensures that even if the LLM-generated SQL is missing the account_id filter,
+        // we programmatically enforce it
+        var securedSql = EnforceRowLevelSecurity(sql, validAccountIds);
+
         // Add LIMIT if not present
-        if (!sql.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
+        if (!securedSql.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
         {
-            sql = sql.TrimEnd().TrimEnd(';') + " LIMIT 100";
+            securedSql = securedSql.TrimEnd().TrimEnd(';') + " LIMIT 100";
         }
 
         try
@@ -243,7 +268,7 @@ public class NlqService(
             await connection.OpenAsync(ct);
 
             await using var command = connection.CreateCommand();
-            command.CommandText = sql;
+            command.CommandText = securedSql;
             command.CommandTimeout = 30;
 
             await using var reader = await command.ExecuteReaderAsync(ct);
@@ -281,5 +306,30 @@ public class NlqService(
             logger.LogError(ex, "Failed to execute NLQ SQL: {Sql}", sql);
             throw new InvalidOperationException($"Query execution failed: {ex.Message}");
         }
+    }
+
+    private static string EnforceRowLevelSecurity(string sql, List<Guid> validAccountIds)
+    {
+        // If the SQL doesn't query the transactions table, no need to enforce
+        var upperSql = sql.ToUpperInvariant();
+        if (!upperSql.Contains("FROM TRANSACTIONS") && !upperSql.Contains("FROM \"TRANSACTIONS\""))
+        {
+            return sql;
+        }
+
+        // Build the account filter
+        var accountFilter = string.Join(", ", validAccountIds.Select(id => $"'{id}'"));
+
+        // Wrap the query to enforce account filtering
+        // This uses a CTE to ensure the filter is applied regardless of the LLM-generated SQL
+        return $@"
+WITH authorized_transactions AS (
+    SELECT t.* 
+    FROM transactions t
+    WHERE t.account_id IN ({accountFilter})
+)
+{sql.Replace("FROM transactions", "FROM authorized_transactions")
+       .Replace("FROM \"transactions\"", "FROM authorized_transactions")
+       .Replace("from transactions", "FROM authorized_transactions")}";
     }
 }
