@@ -198,8 +198,10 @@ function NlqResultDisplay({ result }: { result: NlqResponse }) {
           </thead>
           <tbody>
             {rows.slice(0, 20).map((row, i) => {
-              // Create a stable key from row data
-              const rowKey = JSON.stringify(row) + i;
+              // Create a stable key by hashing the first few column values + index
+              // This is more efficient than JSON.stringify for large objects
+              const keyValues = columns.slice(0, 3).map(col => String(row[col] ?? '')).join('|');
+              const rowKey = `${keyValues}-${i}`;
               return (
                 <tr key={rowKey} className="border-b last:border-0">
                   {columns.map((col) => (
