@@ -160,8 +160,9 @@ export function TransactionsPage() {
             <div className="mt-4 pt-4 border-t grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Account Filter */}
               <div>
-                <Label className="text-sm">Account</Label>
+                <Label htmlFor="account-filter" className="text-sm">Account</Label>
                 <select
+                  id="account-filter"
                   className="w-full mt-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
                   value={filter.accountId ?? ''}
                   onChange={(e) => handleFilterChange('accountId', e.target.value || undefined)}
@@ -177,8 +178,9 @@ export function TransactionsPage() {
 
               {/* Category Filter */}
               <div>
-                <Label className="text-sm">Category</Label>
+                <Label htmlFor="category-filter" className="text-sm">Category</Label>
                 <select
+                  id="category-filter"
                   className="w-full mt-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
                   value={filter.categoryId ?? ''}
                   onChange={(e) => handleFilterChange('categoryId', e.target.value || undefined)}
