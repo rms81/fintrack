@@ -25,10 +25,10 @@ export function AskPage() {
 
     executeQuery(question, {
       onSuccess: (result) => {
-        // Add unique ID using timestamp + question hash
+        // Add unique ID using crypto.randomUUID() for stable React keys
         const historyItem: NlqHistoryItem = {
           ...result,
-          id: `${Date.now()}-${result.question.substring(0, 20)}`,
+          id: crypto.randomUUID(),
         };
         setHistory((prev) => [historyItem, ...prev]);
         setQuestion('');
