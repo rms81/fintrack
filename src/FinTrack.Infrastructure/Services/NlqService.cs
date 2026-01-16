@@ -100,6 +100,26 @@ public class NlqService(
         }
     }
 
+    /// <summary>
+    /// Sanitizes user input to prevent prompt injection attacks.
+    /// Escapes newlines, quotes, and special characters that could manipulate LLM behavior.
+    /// </summary>
+    private static string SanitizeForPrompt(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
+
+        return input
+            .Replace("\\", "\\\\")  // Escape backslashes first
+            .Replace("\n", "\\n")   // Escape newlines
+            .Replace("\r", "\\r")   // Escape carriage returns
+            .Replace("\t", "\\t")   // Escape tabs
+            .Replace("'", "\\'")    // Escape single quotes
+            .Replace("\"", "\\\"")  // Escape double quotes
+            .Replace("{", "{{")     // Escape opening braces for string interpolation
+            .Replace("}", "}}");    // Escape closing braces for string interpolation
+    }
+
     private async Task<string> BuildSchemaContextAsync(Guid profileId, CancellationToken ct)
     {
         // Get categories for this profile
@@ -114,8 +134,8 @@ public class NlqService(
             .Select(a => new { a.Id, a.Name, a.BankName })
             .ToListAsync(ct);
 
-        var categoryList = string.Join("\n", categories.Select(c => $"    - '{c.Name}' (id: {c.Id})"));
-        var accountList = string.Join("\n", accounts.Select(a => $"    - '{a.Name}' (bank: {a.BankName ?? "N/A"}, id: {a.Id})"));
+        var categoryList = string.Join("\n", categories.Select(c => $"    - '{SanitizeForPrompt(c.Name)}' (id: {c.Id})"));
+        var accountList = string.Join("\n", accounts.Select(a => $"    - '{SanitizeForPrompt(a.Name)}' (bank: {SanitizeForPrompt(a.BankName ?? "N/A")}, id: {a.Id})"));
         var accountIds = string.Join(", ", accounts.Select(a => $"'{a.Id}'"));
 
         return $$"""
