@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Send, Loader2, Code, AlertCircle, Lightbulb } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { useActiveProfile } from '../../hooks/use-active-profile';
+import { useAccounts } from '../../hooks/use-accounts';
 import { useNlqQuery, useNlqSuggestions } from '../../hooks/use-nlq';
 import type { NlqResponse } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
@@ -11,12 +12,33 @@ type NlqHistoryItem = NlqResponse & { id: string };
 
 export function AskPage() {
   const { activeProfileId } = useActiveProfile();
+  const { data: accounts } = useAccounts(activeProfileId ?? '');
   const [question, setQuestion] = useState('');
   const [showSql, setShowSql] = useState<Record<string, boolean>>({});
   const [history, setHistory] = useState<NlqHistoryItem[]>([]);
 
   const { mutate: executeQuery, isPending } = useNlqQuery(activeProfileId ?? undefined);
   const { data: suggestions } = useNlqSuggestions(activeProfileId ?? undefined);
+
+  // Derive currency from accounts: use a single shared currency if all accounts agree, otherwise default to EUR
+  const currency = useMemo(() => {
+    if (!accounts || accounts.length === 0) {
+      return 'EUR';
+    }
+
+    const uniqueCurrencies = new Set(
+      accounts
+        .map(account => account.currency)
+        .filter((c): c is string => Boolean(c)),
+    );
+
+    if (uniqueCurrencies.size === 1) {
+      return Array.from(uniqueCurrencies)[0];
+    }
+
+    // Multiple different account currencies; fall back to a neutral default
+    return 'EUR';
+  }, [accounts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +132,7 @@ export function AskPage() {
                 ) : (
                   <div className="space-y-4">
                     {/* Result Display */}
-                    <NlqResultDisplay result={result} />
+                    <NlqResultDisplay result={result} currency={currency} />
 
                     {/* Explanation */}
                     {result.explanation && (
@@ -157,7 +179,7 @@ export function AskPage() {
   );
 }
 
-function NlqResultDisplay({ result }: { result: NlqResponse }) {
+function NlqResultDisplay({ result, currency }: { result: NlqResponse; currency: string }) {
   if (result.resultType === 'Scalar') {
     const value = result.data as number | string;
     let displayValue: string;
@@ -165,7 +187,7 @@ function NlqResultDisplay({ result }: { result: NlqResponse }) {
     if (typeof value === 'number') {
       // Heuristic similar to formatCellValue: treat as currency only if it "looks" like an amount
       const looksLikeCurrency = value < 0 || (value !== Math.floor(value) && Math.abs(value) > 1);
-      displayValue = looksLikeCurrency ? formatCurrency(value, 'EUR') : value.toLocaleString();
+      displayValue = looksLikeCurrency ? formatCurrency(value, currency) : value.toLocaleString();
     } else {
       displayValue = String(value);
     }
@@ -206,7 +228,7 @@ function NlqResultDisplay({ result }: { result: NlqResponse }) {
                 <tr key={rowKey} className="border-b last:border-0">
                   {columns.map((col) => (
                     <td key={col} className="py-2 px-3">
-                      {formatCellValue(row[col])}
+                      {formatCellValue(row[col], currency)}
                     </td>
                   ))}
                 </tr>
@@ -225,18 +247,18 @@ function NlqResultDisplay({ result }: { result: NlqResponse }) {
 
   // Chart type - simplified display as table for now
   if (result.resultType === 'Chart') {
-    return <NlqResultDisplay result={{ ...result, resultType: 'Table' }} />;
+    return <NlqResultDisplay result={{ ...result, resultType: 'Table' }} currency={currency} />;
   }
 
   return null;
 }
 
-function formatCellValue(value: unknown): string {
+function formatCellValue(value: unknown, currency: string): string {
   if (value === null || value === undefined) return '-';
   if (typeof value === 'number') {
     // Check if it looks like currency (has decimals or is negative)
     if (value < 0 || (value !== Math.floor(value) && Math.abs(value) > 1)) {
-      return formatCurrency(value, 'EUR');
+      return formatCurrency(value, currency);
     }
     return value.toLocaleString();
   }
