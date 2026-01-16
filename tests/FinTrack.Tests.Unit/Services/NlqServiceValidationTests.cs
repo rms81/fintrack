@@ -18,8 +18,7 @@ public class NlqServiceValidationTests
 
     private string? ValidateSql(string sql)
     {
-        var profileId = Guid.NewGuid();
-        return _validateSqlMethod.Invoke(null, new object[] { sql, profileId }) as string;
+        return _validateSqlMethod.Invoke(null, new object[] { sql }) as string;
     }
 
     [Theory]
