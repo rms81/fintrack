@@ -67,6 +67,7 @@ public static class DashboardEndpoints
 
         // Get top spending category
         var topCategory = await query
+            .Include(t => t.Category)
             .Where(t => t.Amount < 0 && t.CategoryId != null)
             .GroupBy(t => new { t.CategoryId, t.Category!.Name })
             .Select(g => new { g.Key.CategoryId, g.Key.Name, Total = Math.Abs(g.Sum(t => t.Amount)) })
@@ -144,6 +145,7 @@ public static class DashboardEndpoints
             query = query.Where(t => t.AccountId == accountId.Value);
 
         var categoryGroups = await query
+            .Include(t => t.Category)
             .GroupBy(t => new {
                 CategoryId = t.CategoryId ?? Guid.Empty,
                 CategoryName = t.Category != null ? t.Category.Name : "Uncategorized",
