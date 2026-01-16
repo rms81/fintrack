@@ -34,6 +34,7 @@ import {
   type TopMerchant,
   type DashboardFilter,
   type ProblemDetails,
+  type NlqResponse,
   ApiError,
 } from './types';
 
@@ -342,4 +343,16 @@ export const dashboardApi = {
     const query = buildDashboardQuery(filter, { limit: limit.toString() });
     return request<TopMerchant[]>(`/profiles/${profileId}/dashboard/top-merchants${query}`);
   },
+};
+
+// NLQ API
+export const nlqApi = {
+  query: (profileId: string, question: string) =>
+    request<NlqResponse>(`/profiles/${profileId}/nlq/query`, {
+      method: 'POST',
+      body: JSON.stringify({ question }),
+    }),
+
+  getSuggestions: (profileId: string) =>
+    request<string[]>(`/profiles/${profileId}/nlq/suggestions`),
 };

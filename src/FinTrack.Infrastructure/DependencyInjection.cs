@@ -38,6 +38,9 @@ public static class DependencyInjection
         // Register Category Seeder
         services.AddSingleton<ICategorySeeder, CategorySeeder>();
 
+        // Register NLQ Service
+        services.AddScoped<INlqService, NlqService>();
+
         // Register LLM Service (OpenRouter or Stub)
         var llmSection = configuration.GetSection(LlmOptions.Section);
         if (llmSection.Exists() && !string.IsNullOrEmpty(llmSection["ApiKey"]))

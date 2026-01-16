@@ -5,6 +5,7 @@ import {
   Receipt,
   Upload,
   Filter,
+  MessageSquareText,
   PieChart,
   Settings,
   X,
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Transactions', href: '/transactions', icon: Receipt },
   { name: 'Import', href: '/import', icon: Upload },
   { name: 'Rules', href: '/rules', icon: Filter },
+  { name: 'Ask', href: '/ask', icon: MessageSquareText },
   { name: 'Reports', href: '/reports', icon: PieChart },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

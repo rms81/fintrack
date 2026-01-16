@@ -11,6 +11,7 @@ import { TransactionsPage } from './features/transactions';
 import { RulesPage } from './features/rules';
 import { ReportsPage } from './features/reports';
 import { SettingsPage } from './features/settings';
+import { AskPage } from './features/ask/ask-page';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ function App() {
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="rules" element={<RulesPage />} />
+            <Route path="ask" element={<AskPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
