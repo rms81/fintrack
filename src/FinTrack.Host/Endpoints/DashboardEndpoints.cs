@@ -136,7 +136,7 @@ public static class DashboardEndpoints
 
         var categoryGroups = await query
             .GroupBy(t => new {
-                CategoryId = t.CategoryId ?? Guid.Empty,
+                CategoryId = t.CategoryId,
                 CategoryName = t.Category != null ? t.Category.Name : "Uncategorized",
                 CategoryColor = t.Category != null ? t.Category.Color : "#9CA3AF"
             })
