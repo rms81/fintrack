@@ -7,11 +7,14 @@ import { useNlqQuery, useNlqSuggestions } from '../../hooks/use-nlq';
 import type { NlqResponse } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
 
+// Extended type with unique ID for React keys
+type NlqHistoryItem = NlqResponse & { id: string };
+
 export function AskPage() {
   const { activeProfileId } = useActiveProfile();
   const [question, setQuestion] = useState('');
-  const [showSql, setShowSql] = useState<Record<number, boolean>>({});
-  const [history, setHistory] = useState<NlqResponse[]>([]);
+  const [showSqlMap, setShowSqlMap] = useState<Record<string, boolean>>({});
+  const [history, setHistory] = useState<NlqHistoryItem[]>([]);
 
   const { mutate: executeQuery, isPending } = useNlqQuery(activeProfileId ?? undefined);
   const { data: suggestions } = useNlqSuggestions(activeProfileId ?? undefined);
@@ -22,7 +25,12 @@ export function AskPage() {
 
     executeQuery(question, {
       onSuccess: (result) => {
-        setHistory((prev) => [result, ...prev]);
+        // Add unique ID using timestamp + question hash
+        const historyItem: NlqHistoryItem = {
+          ...result,
+          id: `${Date.now()}-${result.question.substring(0, 20)}`,
+        };
+        setHistory((prev) => [historyItem, ...prev]);
         setQuestion('');
       },
     });
@@ -92,8 +100,8 @@ export function AskPage() {
       {/* Results */}
       {history.length > 0 && (
         <div className="space-y-4">
-          {history.map((result, index) => (
-            <Card key={index}>
+          {history.map((result) => (
+            <Card key={result.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium text-gray-700">
                   {result.question}
@@ -119,13 +127,18 @@ export function AskPage() {
                     {result.generatedSql && (
                       <div>
                         <button
-                          onClick={() => setShowSql((prev) => ({ ...prev, [index]: !prev[index] }))}
+                          onClick={() =>
+                            setShowSqlMap((prev) => ({
+                              ...prev,
+                              [result.id]: !prev[result.id],
+                            }))
+                          }
                           className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
                         >
                           <Code className="h-4 w-4" />
-                          {showSql[index] ? 'Hide SQL' : 'Show SQL'}
+                          {showSqlMap[result.id] ? 'Hide SQL' : 'Show SQL'}
                         </button>
-                        {showSql[index] && (
+                        {showSqlMap[result.id] && (
                           <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
                             {result.generatedSql}
                           </pre>
