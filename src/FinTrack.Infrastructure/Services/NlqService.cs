@@ -232,8 +232,8 @@ public class NlqService(
             return "Only SELECT queries are allowed";
         }
 
-        // Check for SQL comment injection attempts
-        if (sql.Contains("--") || sql.Contains("/*"))
+        // Check for SQL comment injection attempts (both line and block comments)
+        if (Regex.IsMatch(sql, @"--|\*/|/\*", RegexOptions.None))
         {
             return "SQL comments are not allowed in queries";
         }
