@@ -158,10 +158,19 @@ export function AskPage() {
 function NlqResultDisplay({ result }: { result: NlqResponse }) {
   if (result.resultType === 'Scalar') {
     const value = result.data as number | string;
-    const isAmount = typeof value === 'number';
+    let displayValue: string;
+
+    if (typeof value === 'number') {
+      // Heuristic similar to formatCellValue: treat as currency only if it "looks" like an amount
+      const looksLikeCurrency = value < 0 || (value !== Math.floor(value) && Math.abs(value) > 1);
+      displayValue = looksLikeCurrency ? formatCurrency(value, 'EUR') : value.toLocaleString();
+    } else {
+      displayValue = String(value);
+    }
+
     return (
       <div className="text-3xl font-bold">
-        {isAmount ? formatCurrency(value, 'EUR') : String(value)}
+        {displayValue}
       </div>
     );
   }
