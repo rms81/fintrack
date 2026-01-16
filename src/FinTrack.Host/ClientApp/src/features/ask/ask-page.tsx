@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useAccounts } from '../../hooks/use-accounts';
-import { useNlqQuery, useNlqSuggestions } from '../../hooks/use-nlq';
+import { useNlqMutation, useNlqSuggestions } from '../../hooks/use-nlq';
 import type { NlqResponse } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
 
@@ -19,7 +19,7 @@ export function AskPage() {
   const [showSql, setShowSql] = useState<Record<string, boolean>>({});
   const [history, setHistory] = useState<NlqHistoryItem[]>([]);
 
-  const { mutate: executeQuery, isPending } = useNlqQuery(activeProfileId ?? undefined);
+  const { mutate: executeQuery, isPending } = useNlqMutation(activeProfileId ?? undefined);
   const { data: suggestions } = useNlqSuggestions(activeProfileId ?? undefined);
 
   // Derive currency from accounts: use a single shared currency if all accounts agree, otherwise default to EUR

@@ -6,7 +6,7 @@ export const nlqKeys = {
   suggestions: (profileId: string) => [...nlqKeys.all, 'suggestions', profileId] as const,
 };
 
-export function useNlqQuery(profileId: string | undefined) {
+export function useNlqMutation(profileId: string | undefined) {
   return useMutation({
     mutationFn: (question: string) => {
       if (!profileId) throw new Error('Profile ID is required');
