@@ -476,9 +476,22 @@ export function TransactionsPage() {
           <div 
             className="fixed inset-0 z-50 bg-gray-900/50"
             onClick={() => setDeleteConfirm({ show: false, transactionId: null, description: null })}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setDeleteConfirm({ show: false, transactionId: null, description: null });
+              }
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
           />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold">Delete Transaction</h3>
+          <div 
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-xl"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+          >
+            <h3 id="delete-dialog-title" className="text-lg font-semibold">Delete Transaction</h3>
             <p className="mt-2 text-sm text-gray-500">
               Are you sure you want to delete this transaction{deleteConfirm.description ? ` "${deleteConfirm.description}"` : ''}? This action cannot be undone.
             </p>
