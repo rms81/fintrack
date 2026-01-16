@@ -26,6 +26,11 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .IsRequired()
             .HasMaxLength(500);
 
+        // Computed column for normalized description (used for merchant grouping)
+        builder.Property<string>("NormalizedDescription")
+            .HasComputedColumnSql("UPPER(TRIM(description))", stored: true)
+            .HasMaxLength(500);
+
         builder.Property(t => t.Notes)
             .HasColumnType("text");
 
@@ -47,6 +52,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.HasIndex(t => t.Date).IsDescending();
         builder.HasIndex(t => new { t.AccountId, t.Date }).IsDescending(false, true);
         builder.HasIndex(t => t.DuplicateHash);
+        builder.HasIndex("NormalizedDescription");
 
         builder.HasOne(t => t.Account)
             .WithMany(a => a.Transactions)
