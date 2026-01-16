@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import {
   Search,
@@ -41,10 +41,18 @@ export function TransactionsPage() {
     transactionId: null,
     description: null,
   });
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const { data: transactionPage, isLoading, error } = useTransactions(activeProfileId ?? undefined, filter);
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
+
+  // Focus the dialog when it opens
+  useEffect(() => {
+    if (deleteConfirm.show && dialogRef.current) {
+      dialogRef.current.focus();
+    }
+  }, [deleteConfirm.show]);
 
   const categoryMap = useMemo(() => {
     if (!categories) return new Map<string, Category>();
@@ -476,20 +484,20 @@ export function TransactionsPage() {
           <div 
             className="fixed inset-0 z-50 bg-gray-900/50"
             onClick={() => setDeleteConfirm({ show: false, transactionId: null, description: null })}
+            role="presentation"
+          />
+          <div 
+            ref={dialogRef}
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-xl"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 setDeleteConfirm({ show: false, transactionId: null, description: null });
               }
             }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-dialog-title"
-          />
-          <div 
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-xl"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="delete-dialog-title"
+            tabIndex={-1}
           >
             <h3 id="delete-dialog-title" className="text-lg font-semibold">Delete Transaction</h3>
             <p className="mt-2 text-sm text-gray-500">
