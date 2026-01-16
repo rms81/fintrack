@@ -76,9 +76,6 @@ setup('authenticate', async ({ page, request }) => {
   // Get the profiles from the API and set the first one as active
   const profileCard = page.locator('[class*="card"]').filter({ hasText: /profile/i }).first();
   if (await profileCard.isVisible({ timeout: 5000 }).catch(() => false)) {
-    // Get profile ID from the card if possible, or use API
-    const context = page.context();
-
     // Get current localStorage to check if activeProfileId is already set
     const localStorage = await page.evaluate(() => {
       return window.localStorage.getItem('fintrack-active-profile');
@@ -86,7 +83,6 @@ setup('authenticate', async ({ page, request }) => {
 
     if (!localStorage) {
       // Fetch profiles via API to get the profile ID
-      const cookies = await context.cookies();
       const profilesResponse = await page.request.get('/api/profiles');
       if (profilesResponse.ok()) {
         const profiles = await profilesResponse.json();
