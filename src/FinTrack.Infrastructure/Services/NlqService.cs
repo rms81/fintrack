@@ -16,7 +16,10 @@ public class NlqService(
     private static readonly string[] ForbiddenKeywords =
     [
         "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "TRUNCATE",
-        "EXECUTE", "EXEC", "INTO", "GRANT", "REVOKE", "MERGE"
+        "EXECUTE", "EXEC", "INTO", "GRANT", "REVOKE", "MERGE",
+        "COPY", "CALL", "PERFORM", "SET", "WITH",
+        "SAVEPOINT", "ROLLBACK", "COMMIT", "VACUUM", "ANALYZE",
+        ";"
     ];
 
     public async Task<NlqResponse> ExecuteQueryAsync(
