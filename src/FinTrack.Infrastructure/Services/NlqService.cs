@@ -204,7 +204,27 @@ public class NlqService(
         if (string.IsNullOrWhiteSpace(sql))
             return "No SQL query was generated";
 
+        // Check for SQL comments that could be used to bypass validation
+        // Check for both single-line (--) and block comments (/* */)
+        if (sql.Contains("--") || sql.Contains("/*"))
+        {
+            return "SQL comments are not allowed in queries";
+        }
+
         var upperSql = sql.ToUpperInvariant();
+
+        // Must be a SELECT query
+        if (!upperSql.TrimStart().StartsWith("SELECT"))
+        {
+            return "Only SELECT queries are allowed";
+        }
+
+        // Check for file export patterns (before checking forbidden keywords)
+        if (Regex.IsMatch(upperSql, @"\bINTO\s+OUTFILE\b", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(upperSql, @"\bINTO\s+DUMPFILE\b", RegexOptions.IgnoreCase))
+        {
+            return "File export operations are not allowed";
+        }
 
         // Check for forbidden keywords
         foreach (var keyword in ForbiddenKeywords)
@@ -216,10 +236,12 @@ public class NlqService(
             }
         }
 
-        // Must be a SELECT query
-        if (!upperSql.TrimStart().StartsWith("SELECT"))
+        // Check for multiple statements (semicolons that could indicate SQL injection)
+        var trimmedSql = sql.Trim();
+        var lastSemicolonIndex = trimmedSql.LastIndexOf(';');
+        if (lastSemicolonIndex >= 0 && lastSemicolonIndex < trimmedSql.Length - 1)
         {
-            return "Only SELECT queries are allowed";
+            return "Multiple SQL statements are not allowed";
         }
 
         return null;
