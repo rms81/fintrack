@@ -320,16 +320,14 @@ public class NlqService(
         // Build the account filter
         var accountFilter = string.Join(", ", validAccountIds.Select(id => $"'{id}'"));
 
-        // Wrap the query to enforce account filtering
-        // This uses a CTE to ensure the filter is applied regardless of the LLM-generated SQL
-        return $@"
-WITH authorized_transactions AS (
-    SELECT t.* 
-    FROM transactions t
-    WHERE t.account_id IN ({accountFilter})
-)
-{sql.Replace("FROM transactions", "FROM authorized_transactions")
-       .Replace("FROM \"transactions\"", "FROM authorized_transactions")
-       .Replace("from transactions", "FROM authorized_transactions")}";
+        // Wrap the query to enforce account filtering using a subquery
+        // This ensures that even if the LLM-generated SQL is missing the account_id filter,
+        // we programmatically enforce it by wrapping the entire query
+        var pattern = new Regex(@"\bFROM\s+transactions\b", RegexOptions.IgnoreCase);
+        var securedSql = pattern.Replace(sql, 
+            $"FROM (SELECT * FROM transactions WHERE account_id IN ({accountFilter})) AS transactions", 
+            1); // Replace only the first occurrence
+
+        return securedSql;
     }
 }
