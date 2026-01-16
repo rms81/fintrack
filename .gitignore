@@ -1,6 +1,9 @@
 # .NET
 bin/
 obj/
+# Windows-style paths (with backslash)
+**/bin\\*
+**/obj\\*
 *.user
 *.suo
 *.userosscache
