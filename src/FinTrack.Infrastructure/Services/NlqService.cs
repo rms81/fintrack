@@ -22,6 +22,10 @@ public class NlqService(
         ";"
     ];
 
+    private static readonly Regex TransactionsTablePattern = new(
+        @"\bFROM\s+(""?transactions""?)\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public async Task<NlqResponse> ExecuteQueryAsync(
         Guid profileId,
         string question,
@@ -228,18 +232,10 @@ public class NlqService(
             return "Only SELECT queries are allowed";
         }
 
-        // Verify account_id filtering is present for row-level security
-        // The SQL must contain account_id in a WHERE or JOIN clause
-        if (upperSql.Contains("FROM TRANSACTIONS") || upperSql.Contains("FROM \"TRANSACTIONS\""))
+        // Check for SQL comment injection attempts
+        if (sql.Contains("--") || sql.Contains("/*"))
         {
-            // Check if any valid account IDs are referenced in the SQL
-            var hasAccountFilter = validAccountIds.Any(accountId =>
-                sql.Contains(accountId.ToString(), StringComparison.OrdinalIgnoreCase));
-
-            if (!hasAccountFilter && !upperSql.Contains("ACCOUNT_ID"))
-            {
-                return "Query must filter transactions by account_id for security. Please ensure your query includes an account filter.";
-            }
+            return "SQL comments are not allowed in queries";
         }
 
         return null;
@@ -338,8 +334,7 @@ public class NlqService(
         // This ensures that even if the LLM-generated SQL is missing the account_id filter,
         // we programmatically enforce it by wrapping all transaction table references
         // Note: We replace ALL occurrences to handle JOINs and multiple table references
-        var pattern = new Regex(@"\bFROM\s+transactions\b", RegexOptions.IgnoreCase);
-        var securedSql = pattern.Replace(sql, 
+        var securedSql = TransactionsTablePattern.Replace(sql, 
             "FROM (SELECT * FROM transactions WHERE account_id = ANY(@authorized_account_ids)) AS transactions");
 
         return (securedSql, parameters);
