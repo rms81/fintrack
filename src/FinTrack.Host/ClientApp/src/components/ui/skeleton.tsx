@@ -44,6 +44,7 @@ export function SkeletonCard({ className }: SkeletonProps) {
         'rounded-lg border border-gray-200 bg-white p-4 shadow-sm',
         className
       )}
+      aria-hidden="true"
     >
       <div className="flex items-center gap-4">
         <Skeleton className="h-12 w-12 rounded-full" />
@@ -126,6 +127,7 @@ export function SkeletonChart({ className }: SkeletonProps) {
         'flex h-64 items-end justify-between gap-2 rounded-lg border border-gray-200 bg-white p-4',
         className
       )}
+      aria-hidden="true"
     >
       {/* Bar chart skeleton */}
       {[40, 65, 45, 80, 55, 70, 50, 85, 60, 75, 45, 90].map((height, i) => (
@@ -149,6 +151,7 @@ export function SkeletonStat({ className }: SkeletonProps) {
         'rounded-lg border border-gray-200 bg-white p-6',
         className
       )}
+      aria-hidden="true"
     >
       <Skeleton className="mb-2 h-4 w-24" />
       <Skeleton className="mb-1 h-8 w-32" />
