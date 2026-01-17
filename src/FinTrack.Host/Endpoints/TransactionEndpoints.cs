@@ -1,3 +1,4 @@
+using System.Globalization;
 using FinTrack.Core.Features.Transactions;
 using FinTrack.Core.Services;
 using FinTrack.Infrastructure.Persistence;
@@ -59,10 +60,10 @@ public static class TransactionEndpoints
         if (toDate.HasValue)
             query = query.Where(t => t.Date <= toDate.Value);
 
-        if (!string.IsNullOrWhiteSpace(minAmount) && decimal.TryParse(minAmount, out var minAmountValue))
+        if (!string.IsNullOrWhiteSpace(minAmount) && decimal.TryParse(minAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out var minAmountValue))
             query = query.Where(t => t.Amount >= minAmountValue);
 
-        if (!string.IsNullOrWhiteSpace(maxAmount) && decimal.TryParse(maxAmount, out var maxAmountValue))
+        if (!string.IsNullOrWhiteSpace(maxAmount) && decimal.TryParse(maxAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out var maxAmountValue))
             query = query.Where(t => t.Amount <= maxAmountValue);
 
         if (!string.IsNullOrWhiteSpace(search))
