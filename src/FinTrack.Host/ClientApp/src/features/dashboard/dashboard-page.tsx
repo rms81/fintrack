@@ -7,7 +7,6 @@ import {
   Receipt,
   AlertCircle,
   ArrowRight,
-  Loader2,
 } from 'lucide-react';
 import {
   PieChart,
@@ -24,6 +23,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Skeleton, SkeletonChart, SkeletonList } from '../../components/ui/skeleton';
 import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useAccounts } from '../../hooks/use-accounts';
 import { useTransactions } from '../../hooks/use-transactions';
@@ -120,7 +120,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <Skeleton className="h-8 w-32" />
             ) : (
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(summary?.totalIncome ?? 0, currency)}
@@ -136,7 +136,10 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <>
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="mt-1 h-3 w-24" />
+              </>
             ) : (
               <>
                 <div className="text-2xl font-bold text-red-600">
@@ -159,7 +162,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <Skeleton className="h-8 w-32" />
             ) : (
               <div className={`text-2xl font-bold ${(summary?.netBalance ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(summary?.netBalance ?? 0, currency)}
@@ -175,7 +178,10 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <>
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="mt-1 h-3 w-24" />
+              </>
             ) : (
               <>
                 <div className="text-2xl font-bold">{summary?.transactionCount ?? 0}</div>
@@ -200,9 +206,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {categoryLoading ? (
-              <div className="h-64 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-              </div>
+              <SkeletonChart className="h-64" />
             ) : !categorySpending || categorySpending.length === 0 ? (
               <div className="h-64 flex items-center justify-center text-gray-500">
                 No expense data for this period
@@ -247,9 +251,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {timeLoading ? (
-              <div className="h-64 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-              </div>
+              <SkeletonChart className="h-64" />
             ) : !chartData || chartData.length === 0 ? (
               <div className="h-64 flex items-center justify-center text-gray-500">
                 No data available
@@ -296,9 +298,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {merchantsLoading ? (
-              <div className="h-48 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-              </div>
+              <SkeletonList items={5} className="h-48" />
             ) : !topMerchants || topMerchants.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-gray-500">
                 No merchant data for this period

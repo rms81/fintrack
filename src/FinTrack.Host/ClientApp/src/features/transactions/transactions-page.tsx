@@ -9,13 +9,13 @@ import {
   AlertCircle,
   Pencil,
   Trash2,
-  Loader2,
   Tag,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { SkeletonTable } from '../../components/ui/skeleton';
 import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useAccounts } from '../../hooks/use-accounts';
 import { useCategories } from '../../hooks/use-categories';
@@ -293,9 +293,7 @@ export function TransactionsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
+            <SkeletonTable rows={10} columns={5} />
           ) : error ? (
             <div className="flex items-center justify-center py-12 text-red-500">
               <AlertCircle className="h-5 w-5 mr-2" />
@@ -375,13 +373,9 @@ export function TransactionsPage() {
                               <Button
                                 size="sm"
                                 onClick={handleUpdateCategory}
-                                disabled={updateMutation.isPending}
+                                loading={updateMutation.isPending}
                               >
-                                {updateMutation.isPending ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  'Save'
-                                )}
+                                Save
                               </Button>
                               <Button
                                 size="sm"
