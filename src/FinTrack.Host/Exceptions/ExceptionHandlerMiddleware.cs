@@ -79,7 +79,7 @@ public class ExceptionHandlerMiddleware
         await context.Response.WriteAsJsonAsync(problemDetails);
     }
 
-    private static ProblemDetails CreateProblemDetails(AppException exception, HttpContext context, string traceId)
+    private ProblemDetails CreateProblemDetails(AppException exception, HttpContext context, string traceId)
     {
         return new ProblemDetails
         {
@@ -95,7 +95,7 @@ public class ExceptionHandlerMiddleware
         };
     }
 
-    private static ValidationProblemDetails CreateValidationProblemDetails(
+    private ValidationProblemDetails CreateValidationProblemDetails(
         ValidationException exception,
         HttpContext context,
         string traceId)
