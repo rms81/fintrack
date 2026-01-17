@@ -64,13 +64,14 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
-    {
+    /* WebKit requires additional system dependencies - only run on CI */
+    ...(process.env.CI ? [{
       name: 'webkit',
       use: {
         ...devices['Desktop Safari'],
       },
       dependencies: ['setup'],
-    },
+    }] : []),
 
     /* Test against mobile viewports */
     {

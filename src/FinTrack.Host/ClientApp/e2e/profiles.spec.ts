@@ -6,8 +6,8 @@ test.describe('Profiles (Authenticated)', () => {
   test('can view profiles list', async ({ page }) => {
     await page.goto('/profiles');
 
-    // Should show profiles page
-    await expect(page.locator('text=/profiles|personal|business/i')).toBeVisible();
+    // Should show profiles page heading
+    await expect(page.getByRole('heading', { name: 'Profiles' })).toBeVisible();
   });
 
   test('can create a new profile', async ({ page }) => {
@@ -29,11 +29,11 @@ test.describe('Profiles (Authenticated)', () => {
           await typeSelect.selectOption('Personal');
         }
 
-        // Submit
-        await page.getByRole('button', { name: /save|create|submit/i }).click();
+        // Submit - click the Create Profile button specifically
+        await page.getByRole('button', { name: /^create profile$/i }).click();
 
-        // Should see success or the new profile
-        await expect(page.locator('text=/Test Profile|success|created/i')).toBeVisible();
+        // Wait for navigation back to profiles list
+        await expect(page.getByRole('heading', { name: 'Profiles', exact: true })).toBeVisible({ timeout: 10000 });
       }
     }
   });

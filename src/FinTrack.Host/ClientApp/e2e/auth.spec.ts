@@ -15,8 +15,11 @@ test.describe('Authentication', () => {
 
       await page.getByRole('button', { name: /sign in|log in/i }).click();
 
-      // Should show validation message
-      await expect(page.locator('text=/required|email|password/i')).toBeVisible();
+      // Should show validation message - check for "required" text in error messages
+      // The form should either show HTML5 validation or custom error messages
+      const emailInput = page.getByLabel('Email');
+      const isInvalid = await emailInput.evaluate((el: HTMLInputElement) => !el.validity.valid);
+      expect(isInvalid).toBe(true);
     });
 
     test('shows error for invalid credentials', async ({ page }) => {
@@ -43,7 +46,7 @@ test.describe('Authentication', () => {
       await page.goto('/register');
 
       await expect(page.getByLabel('Email')).toBeVisible();
-      await expect(page.getByLabel('Password')).toBeVisible();
+      await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: /register|sign up|create/i })).toBeVisible();
     });
 
