@@ -202,7 +202,7 @@ const ProfileSchema = z.object({
 - Foreign keys: `{table_name}_id` (e.g., `profile_id`)
 
 **Keys and Types:**
-- Primary keys: UUIDv7 (requires PostgreSQL extension or custom function for v7 generation)
+- Primary keys: UUID (using PostgreSQL's `gen_random_uuid()`)
 - Timestamps: `timestamptz` for all datetime values
 - Arrays: Use PostgreSQL native arrays (`text[]`) for tags
 - JSON: Use `jsonb` for flexible/raw data storage
@@ -273,7 +273,7 @@ public static class Handler
 return Results.Problem("Not found", statusCode: 404);
 ```
 
-✅ **PostgreSQL Features** - UUIDv7, JSONB, arrays, GIN indexes
+✅ **PostgreSQL Features** - UUID, JSONB, arrays, GIN indexes
 
 ✅ **React Composition** - Small, focused components
 
