@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace FinTrack.Tests.Integration.Security;
 
@@ -9,6 +10,11 @@ public class SecurityHeadersTests : IClassFixture<FinTrackWebApplicationFactory>
     public SecurityHeadersTests(FinTrackWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
+    }
+
+    private static string GetCspHeader(HttpResponseMessage response)
+    {
+        return response.Headers.GetValues("Content-Security-Policy").First();
     }
 
     [Fact]
@@ -45,7 +51,7 @@ public class SecurityHeadersTests : IClassFixture<FinTrackWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.True(response.Headers.Contains("Content-Security-Policy"));
         
-        var csp = response.Headers.GetValues("Content-Security-Policy").First();
+        var csp = GetCspHeader(response);
         
         // Verify CSP is set and contains expected directives
         Assert.NotEmpty(csp);
@@ -64,7 +70,7 @@ public class SecurityHeadersTests : IClassFixture<FinTrackWebApplicationFactory>
         var response = await _client.GetAsync("/");
 
         // Assert
-        var csp = response.Headers.GetValues("Content-Security-Policy").First();
+        var csp = GetCspHeader(response);
         
         // Test environment should not include 'unsafe-eval'
         Assert.DoesNotContain("unsafe-eval", csp);
@@ -77,10 +83,10 @@ public class SecurityHeadersTests : IClassFixture<FinTrackWebApplicationFactory>
         var response = await _client.GetAsync("/");
 
         // Assert
-        var csp = response.Headers.GetValues("Content-Security-Policy").First();
+        var csp = GetCspHeader(response);
         
         // Extract style-src directive
-        var styleSrcMatch = System.Text.RegularExpressions.Regex.Match(csp, @"style-src[^;]+");
+        var styleSrcMatch = Regex.Match(csp, @"style-src[^;]+");
         Assert.True(styleSrcMatch.Success);
         
         var styleSrc = styleSrcMatch.Value;
