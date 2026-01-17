@@ -202,7 +202,7 @@ const ProfileSchema = z.object({
 - Foreign keys: `{table_name}_id` (e.g., `profile_id`)
 
 **Keys and Types:**
-- Primary keys: UUIDv7 (use PostgreSQL's `gen_random_uuid()` with v7 extension)
+- Primary keys: UUIDv7 (requires PostgreSQL extension or custom function for v7 generation)
 - Timestamps: `timestamptz` for all datetime values
 - Arrays: Use PostgreSQL native arrays (`text[]`) for tags
 - JSON: Use `jsonb` for flexible/raw data storage
