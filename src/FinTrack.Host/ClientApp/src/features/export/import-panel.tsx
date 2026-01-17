@@ -15,14 +15,22 @@ const ProfileTypeLabels: Record<number, string> = {
 };
 
 function getErrorMessage(error: unknown, defaultMessage: string): string {
-  const anyError = error as any;
   // Prefer Problem Details fields if available.
-  if (anyError?.response?.data) {
-    const data = anyError.response.data;
-    if (typeof data.title === 'string' && data.title.trim().length > 0) {
-      return data.title;
-    } else if (typeof data.detail === 'string' && data.detail.trim().length > 0) {
-      return data.detail;
+  if (
+    error &&
+    typeof error === 'object' &&
+    'response' in error &&
+    error.response &&
+    typeof error.response === 'object' &&
+    'data' in error.response
+  ) {
+    const data = error.response.data;
+    if (data && typeof data === 'object') {
+      if ('title' in data && typeof data.title === 'string' && data.title.trim().length > 0) {
+        return data.title;
+      } else if ('detail' in data && typeof data.detail === 'string' && data.detail.trim().length > 0) {
+        return data.detail;
+      }
     }
   } else if (error instanceof Error && error.message.trim().length > 0) {
     return error.message;
