@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/layout';
 import { ProtectedRoute } from './components/protected-route';
+import { ErrorBoundary } from './components/error-boundary';
+import { ToastProvider } from './components/ui/toast';
 import { LoginPage, RegisterPage } from './features/auth';
 import { DashboardPage } from './features/dashboard';
 import { AccountsPage, NewAccountPage, EditAccountPage } from './features/accounts';
@@ -24,9 +26,11 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -55,9 +59,11 @@ function App() {
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

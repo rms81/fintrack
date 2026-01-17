@@ -1,6 +1,7 @@
 using FinTrack.Core.Features.Example;
 using FinTrack.Host.Auth;
 using FinTrack.Host.Endpoints;
+using FinTrack.Host.Exceptions;
 using FinTrack.Infrastructure;
 using FinTrack.Infrastructure.Persistence;
 using Microsoft.AspNetCore.OpenApi;
@@ -69,6 +70,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline
+app.UseAppExceptionHandler();
+
 app.MapOpenApi();
 app.MapScalarApiReference(options =>
 {
