@@ -35,6 +35,11 @@ import {
   type DashboardFilter,
   type ProblemDetails,
   type NlqResponse,
+  type JsonExportOptions,
+  type CsvExportOptions,
+  type JsonImportPreviewResponse,
+  type JsonImportConfirmRequest,
+  type JsonImportResult,
   ApiError,
 } from './types';
 
@@ -355,4 +360,61 @@ export const nlqApi = {
 
   getSuggestions: (profileId: string) =>
     request<string[]>(`/profiles/${profileId}/nlq/suggestions`),
+};
+
+// Export/Import API
+const buildExportQuery = (options: JsonExportOptions | CsvExportOptions): string => {
+  const params = new URLSearchParams();
+
+  if (options.fromDate) params.set('fromDate', options.fromDate);
+  if (options.toDate) params.set('toDate', options.toDate);
+
+  if ('includeRules' in options && options.includeRules !== undefined) {
+    params.set('includeRules', options.includeRules.toString());
+  }
+  if ('includeFormats' in options && options.includeFormats !== undefined) {
+    params.set('includeFormats', options.includeFormats.toString());
+  }
+  if ('accountId' in options && options.accountId) {
+    params.set('accountId', options.accountId);
+  }
+  if ('categoryId' in options && options.categoryId) {
+    params.set('categoryId', options.categoryId);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
+
+export const exportApi = {
+  // Returns URL for direct download (use with window.location or anchor tag)
+  getJsonExportUrl: (profileId: string, options: JsonExportOptions = {}): string => {
+    const query = buildExportQuery(options);
+    return `${API_BASE}/profiles/${profileId}/export/json${query}`;
+  },
+
+  getCsvExportUrl: (profileId: string, options: CsvExportOptions = {}): string => {
+    const query = buildExportQuery(options);
+    return `${API_BASE}/profiles/${profileId}/export/csv${query}`;
+  },
+
+  // JSON Import - preview upload
+  previewJsonImport: async (file: File): Promise<JsonImportPreviewResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE}/import/json/preview`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    return handleResponse<JsonImportPreviewResponse>(response);
+  },
+
+  // JSON Import - confirm
+  confirmJsonImport: (data: JsonImportConfirmRequest) =>
+    request<JsonImportResult>('/import/json/confirm', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
