@@ -2,6 +2,7 @@ import { Menu, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '../ui/button';
 import { ProfileSwitcher } from '../profile-switcher';
+import { ThemeToggle } from '../theme-toggle';
 import { useCurrentUser, useLogout } from '../../hooks';
 
 interface HeaderProps {
@@ -19,7 +20,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
         <Button
           variant="ghost"
@@ -39,9 +40,11 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         <ProfileSwitcher />
 
-        <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
+        <ThemeToggle />
+
+        <div className="flex items-center gap-3 border-l border-gray-200 pl-3 dark:border-gray-700">
           {user && (
-            <span className="text-sm text-gray-600 hidden sm:block">
+            <span className="text-sm text-gray-600 hidden sm:block dark:text-gray-400">
               {user.displayName || user.email}
             </span>
           )}
