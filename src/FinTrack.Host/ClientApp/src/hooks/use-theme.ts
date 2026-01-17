@@ -19,6 +19,8 @@ function getStoredTheme(): Theme {
 }
 
 function applyTheme(theme: Theme) {
+  if (typeof document === 'undefined') return;
+  
   const root = document.documentElement;
   const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
 
@@ -41,6 +43,8 @@ export function useTheme() {
   // Apply theme on mount and when system preference changes
   useEffect(() => {
     applyTheme(theme);
+
+    if (typeof window === 'undefined') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
