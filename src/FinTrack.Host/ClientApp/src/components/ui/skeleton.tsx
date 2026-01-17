@@ -23,7 +23,7 @@ export function Skeleton({ className, style }: SkeletonProps) {
  */
 export function SkeletonText({ className, lines = 1 }: SkeletonProps & { lines?: number }) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-2', className)} aria-hidden="true">
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
