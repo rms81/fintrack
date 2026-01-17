@@ -70,9 +70,19 @@ export function StepsProgress({
   labels,
   className,
 }: StepsProgressProps) {
+  const clampedCurrentStep = Math.min(totalSteps, Math.max(1, currentStep));
+
   return (
     <div className={cn('w-full', className)}>
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between"
+        role="progressbar"
+        aria-label="Multi-step progress"
+        aria-valuenow={clampedCurrentStep}
+        aria-valuemin={1}
+        aria-valuemax={totalSteps}
+        aria-valuetext={`Step ${clampedCurrentStep} of ${totalSteps}`}
+      >
         {Array.from({ length: totalSteps }).map((_, i) => {
           const stepNumber = i + 1;
           const isCompleted = stepNumber < currentStep;
