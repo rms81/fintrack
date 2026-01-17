@@ -9,16 +9,7 @@ import {
 } from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
-
-type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-interface Toast {
-  id: string;
-  type: ToastType;
-  title: string;
-  message?: string;
-  duration?: number;
-}
+import type { Toast, ToastType } from '../../lib/toast';
 
 interface ToastContextValue {
   toasts: Toast[];
@@ -85,7 +76,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const timersRef = useRef<Map<string, number>>(new Map());
+  const timersRef = useRef(new Map<string, number>());
 
   const removeToast = useCallback((id: string) => {
     const timer = timersRef.current.get(id);
@@ -112,9 +103,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    const timers = timersRef.current;
+
     return () => {
-      timersRef.current.forEach((timer) => window.clearTimeout(timer));
-      timersRef.current.clear();
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.clear();
     };
   }, []);
 
