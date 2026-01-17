@@ -26,9 +26,10 @@ public class SecurityHeadersMiddleware
             if (!headers.ContainsKey("Content-Security-Policy"))
             {
                 // Allow self resources + Vite dev server for local dev
+                // Note: Vite HMR requires 'unsafe-inline' for scripts in dev mode
                 var csp = context.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
-                    ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:5173 ws://localhost:5173; font-src 'self' data:;"
-                    : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self' data:;";
+                    ? "default-src 'self'; script-src 'self' 'unsafe-inline' http://localhost:5173; style-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:5173 ws://localhost:5173; font-src 'self' data:;"
+                    : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self' data:;";
 
                 headers["Content-Security-Policy"] = csp;
             }
