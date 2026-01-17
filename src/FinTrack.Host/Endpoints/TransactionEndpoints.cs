@@ -1,6 +1,7 @@
 using System.Globalization;
 using FinTrack.Core.Features.Transactions;
 using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Caching;
 using FinTrack.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -149,6 +150,7 @@ public static class TransactionEndpoints
         [FromBody] UpdateTransactionRequest request,
         FinTrackDbContext db,
         ICurrentUser currentUser,
+        ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -163,11 +165,13 @@ public static class TransactionEndpoints
         if (transaction is null)
             return Results.NotFound();
 
+        var profileId = transaction.Account!.ProfileId;
+
         // Verify category belongs to same profile if specified
         if (request.CategoryId.HasValue)
         {
             var categoryExists = await db.Categories
-                .AnyAsync(c => c.Id == request.CategoryId.Value && c.ProfileId == transaction.Account!.ProfileId, ct);
+                .AnyAsync(c => c.Id == request.CategoryId.Value && c.ProfileId == profileId, ct);
             if (!categoryExists)
                 return Results.BadRequest(new { error = "Category not found in this profile" });
         }
@@ -177,6 +181,11 @@ public static class TransactionEndpoints
         transaction.Tags = request.Tags ?? transaction.Tags;
 
         await db.SaveChangesAsync(ct);
+
+        // Invalidate dashboard caches (transaction amounts/categories affect dashboard)
+        cache.RemoveByPrefix($"fintrack:dashboard:{profileId}");
+        // Also invalidate categories cache (transaction count changes)
+        cache.Remove(CacheKeys.Categories(profileId));
 
         var categoryName = request.CategoryId.HasValue
             ? await db.Categories.Where(c => c.Id == request.CategoryId.Value).Select(c => c.Name).FirstOrDefaultAsync(ct)
@@ -209,20 +218,28 @@ public static class TransactionEndpoints
         Guid id,
         [FromServices] FinTrackDbContext db,
         [FromServices] ICurrentUser currentUser,
+        [FromServices] ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
             return Results.Unauthorized();
 
         var transaction = await db.Transactions
+            .Include(t => t.Account)
             .Where(t => t.Id == id && t.Account!.Profile!.UserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (transaction is null)
             return Results.NotFound();
 
+        var profileId = transaction.Account!.ProfileId;
+
         db.Transactions.Remove(transaction);
         await db.SaveChangesAsync(ct);
+
+        // Invalidate dashboard and categories caches
+        cache.RemoveByPrefix($"fintrack:dashboard:{profileId}");
+        cache.Remove(CacheKeys.Categories(profileId));
 
         return Results.NoContent();
     }

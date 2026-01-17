@@ -3,6 +3,7 @@ using FinTrack.Core.Domain.Enums;
 using FinTrack.Core.Domain.ValueObjects;
 using FinTrack.Core.Features.Import;
 using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Caching;
 using FinTrack.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -134,6 +135,7 @@ public static class ImportEndpoints
         ICurrentUser currentUser,
         IImportService importService,
         IRulesEngine rulesEngine,
+        ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -197,6 +199,10 @@ public static class ImportEndpoints
             session.CsvData = null; // Clear stored data after import
 
             await db.SaveChangesAsync(ct);
+
+            // Invalidate dashboard and categories caches after import
+            cache.RemoveByPrefix($"fintrack:dashboard:{profileId}");
+            cache.Remove(CacheKeys.Categories(profileId));
 
             return Results.Ok(new ConfirmImportResponse(transactions.Count, skippedCount));
         }
