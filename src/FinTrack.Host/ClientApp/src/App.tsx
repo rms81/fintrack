@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/layout';
 import { ProtectedRoute } from './components/protected-route';
+import { ErrorBoundary } from './components/error-boundary';
+import { ToastProvider } from './components/ui/toast';
 import { LoginPage, RegisterPage } from './features/auth';
 import { DashboardPage } from './features/dashboard';
 import { AccountsPage, NewAccountPage, EditAccountPage } from './features/accounts';
@@ -24,40 +26,44 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Auth routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Auth routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-          {/* Public routes */}
-          <Route path="/profiles/new" element={<NewProfilePage />} />
+              {/* Public routes */}
+              <Route path="/profiles/new" element={<NewProfilePage />} />
 
-          {/* Protected routes with layout */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<DashboardPage />} />
-            <Route path="accounts" element={<AccountsPage />} />
-            <Route path="accounts/new" element={<NewAccountPage />} />
-            <Route path="accounts/:id" element={<EditAccountPage />} />
-            <Route path="profiles" element={<ProfilesPage />} />
-            <Route path="profiles/:id/settings" element={<EditProfilePage />} />
-            <Route path="transactions" element={<TransactionsPage />} />
-            <Route path="import" element={<ImportPage />} />
-            <Route path="rules" element={<RulesPage />} />
-            <Route path="ask" element={<AskPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+              {/* Protected routes with layout */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="accounts" element={<AccountsPage />} />
+                <Route path="accounts/new" element={<NewAccountPage />} />
+                <Route path="accounts/:id" element={<EditAccountPage />} />
+                <Route path="profiles" element={<ProfilesPage />} />
+                <Route path="profiles/:id/settings" element={<EditProfilePage />} />
+                <Route path="transactions" element={<TransactionsPage />} />
+                <Route path="import" element={<ImportPage />} />
+                <Route path="rules" element={<RulesPage />} />
+                <Route path="ask" element={<AskPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
