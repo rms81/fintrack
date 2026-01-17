@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -77,8 +85,14 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Map<string, number>>(new Map());
 
   const removeToast = useCallback((id: string) => {
+    const timer = timersRef.current.get(id);
+    if (timer) {
+      window.clearTimeout(timer);
+      timersRef.current.delete(id);
+    }
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
@@ -90,11 +104,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setToasts((prev) => [...prev, { ...toast, id }]);
 
       if (duration > 0) {
-        setTimeout(() => removeToast(id), duration);
+        const timer = window.setTimeout(() => removeToast(id), duration);
+        timersRef.current.set(id, timer);
       }
     },
     [removeToast]
   );
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach((timer) => window.clearTimeout(timer));
+      timersRef.current.clear();
+    };
+  }, []);
 
   const success = useCallback(
     (title: string, message?: string) => addToast({ type: 'success', title, message }),

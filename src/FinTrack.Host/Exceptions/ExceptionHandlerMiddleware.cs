@@ -64,6 +64,15 @@ public class ExceptionHandlerMiddleware
                 context.Request.Path);
         }
 
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning(
+                "Response has already started, skipping Problem Details response. TraceId: {TraceId}, Path: {Path}",
+                traceId,
+                context.Request.Path);
+            return;
+        }
+
         context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/problem+json";
 
