@@ -46,6 +46,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-64 transform border-r border-gray-200 bg-white transition-transform lg:static lg:translate-x-0',
+          'dark:border-gray-700 dark:bg-gray-800',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -67,8 +68,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 className={cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                 )}
               >
                 <item.icon className="h-5 w-5" />
