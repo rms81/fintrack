@@ -24,7 +24,9 @@ export function Progress({
   showLabel = false,
   size = 'default',
 }: ProgressProps) {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const safeMax = max > 0 ? max : 1;
+  const clampedValue = Math.min(safeMax, Math.max(0, value));
+  const percentage = Math.min(100, Math.max(0, (clampedValue / safeMax) * 100));
 
   return (
     <div className={cn('w-full', className)}>
@@ -34,9 +36,9 @@ export function Progress({
           sizeClasses[size]
         )}
         role="progressbar"
-        aria-valuenow={value}
+        aria-valuenow={clampedValue}
         aria-valuemin={0}
-        aria-valuemax={max}
+        aria-valuemax={safeMax}
       >
         <div
           className="h-full rounded-full bg-blue-600 transition-all duration-300 ease-out"
