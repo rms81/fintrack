@@ -64,7 +64,7 @@ export function SkeletonList({
   items = 5,
 }: SkeletonProps & { items?: number }) {
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn('space-y-3', className)} aria-hidden="true">
       {Array.from({ length: items }).map((_, i) => (
         <div
           key={i}
