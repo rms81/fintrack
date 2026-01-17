@@ -36,7 +36,9 @@ export function useTheme() {
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    }
     applyTheme(newTheme);
   }, []);
 
