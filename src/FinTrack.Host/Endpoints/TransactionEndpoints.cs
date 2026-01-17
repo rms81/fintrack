@@ -25,8 +25,8 @@ public static class TransactionEndpoints
         [FromQuery] Guid? categoryId,
         [FromQuery] DateOnly? fromDate,
         [FromQuery] DateOnly? toDate,
-        [FromQuery] decimal? minAmount,
-        [FromQuery] decimal? maxAmount,
+        [FromQuery(Name = "minAmount")] string? minAmount,
+        [FromQuery(Name = "maxAmount")] string? maxAmount,
         [FromQuery] string? search,
         [FromQuery] bool? uncategorized,
         [FromQuery] int page = 1,
@@ -59,11 +59,11 @@ public static class TransactionEndpoints
         if (toDate.HasValue)
             query = query.Where(t => t.Date <= toDate.Value);
 
-        if (minAmount.HasValue)
-            query = query.Where(t => t.Amount >= minAmount.Value);
+        if (!string.IsNullOrWhiteSpace(minAmount) && decimal.TryParse(minAmount, out var minAmountValue))
+            query = query.Where(t => t.Amount >= minAmountValue);
 
-        if (maxAmount.HasValue)
-            query = query.Where(t => t.Amount <= maxAmount.Value);
+        if (!string.IsNullOrWhiteSpace(maxAmount) && decimal.TryParse(maxAmount, out var maxAmountValue))
+            query = query.Where(t => t.Amount <= maxAmountValue);
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(t => EF.Functions.ILike(t.Description, $"%{search}%"));
