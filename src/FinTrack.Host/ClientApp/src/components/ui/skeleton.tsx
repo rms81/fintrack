@@ -91,7 +91,10 @@ export function SkeletonTable({
   columns = 4,
 }: SkeletonProps & { rows?: number; columns?: number }) {
   return (
-    <div className={cn('overflow-hidden rounded-lg border border-gray-200', className)}>
+    <div
+      className={cn('overflow-hidden rounded-lg border border-gray-200', className)}
+      aria-hidden="true"
+    >
       {/* Header */}
       <div className="flex gap-4 border-b border-gray-200 bg-gray-50 p-4">
         {Array.from({ length: columns }).map((_, i) => (
