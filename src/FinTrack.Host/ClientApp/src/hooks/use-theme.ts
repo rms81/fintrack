@@ -19,6 +19,8 @@ function getStoredTheme(): Theme {
 }
 
 function applyTheme(theme: Theme) {
+  if (typeof document === 'undefined') return;
+  
   const root = document.documentElement;
   const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
 
@@ -34,13 +36,17 @@ export function useTheme() {
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    }
     applyTheme(newTheme);
   }, []);
 
   // Apply theme on mount and when system preference changes
   useEffect(() => {
     applyTheme(theme);
+
+    if (typeof window === 'undefined') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
