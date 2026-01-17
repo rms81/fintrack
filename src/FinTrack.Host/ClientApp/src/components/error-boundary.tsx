@@ -68,8 +68,8 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardContent>
             <CardFooter className="flex gap-2">
               <Button variant="outline" onClick={this.handleRetry}>
-                <RefreshCw className="h-4 w-4" />
-                Try Again
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                <span className="ml-2">Try Again</span>
               </Button>
               <Button onClick={this.handleReload}>Reload Page</Button>
             </CardFooter>
