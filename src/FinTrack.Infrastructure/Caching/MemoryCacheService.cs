@@ -50,14 +50,12 @@ public class MemoryCacheService : ICacheService
 
             options.RegisterPostEvictionCallback((k, v, r, s) =>
             {
+                // Clean up tracking dictionaries when cache entry is evicted
                 _keys.TryRemove(k.ToString()!, out _);
-                // Safe to remove and dispose lock here: cache entry is already removed,
-                // so new requests will create a new lock. Existing requests that acquired
-                // the lock are either done or will finish safely.
-                if (_locks.TryRemove(k.ToString()!, out var lockToDispose))
-                {
-                    lockToDispose.Dispose();
-                }
+                // Note: We don't dispose semaphores here to avoid ObjectDisposedException
+                // for threads currently waiting on WaitAsync. Semaphores are lightweight
+                // and the _locks dictionary is bounded by the number of unique cache keys.
+                _locks.TryRemove(k.ToString()!, out _);
             });
 
             _cache.Set(key, value, options);
