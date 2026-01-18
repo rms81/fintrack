@@ -51,6 +51,13 @@ public class MemoryCacheService : ICacheService
             options.RegisterPostEvictionCallback((k, v, r, s) =>
             {
                 _keys.TryRemove(k.ToString()!, out _);
+                // Safe to remove and dispose lock here: cache entry is already removed,
+                // so new requests will create a new lock. Existing requests that acquired
+                // the lock are either done or will finish safely.
+                if (_locks.TryRemove(k.ToString()!, out var lockToDispose))
+                {
+                    lockToDispose.Dispose();
+                }
             });
 
             _cache.Set(key, value, options);
