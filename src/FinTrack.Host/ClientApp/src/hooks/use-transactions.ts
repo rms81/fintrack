@@ -8,6 +8,7 @@ export const transactionKeys = {
   list: (profileId: string, filter: TransactionFilter) => [...transactionKeys.lists(), profileId, filter] as const,
   details: () => [...transactionKeys.all, 'detail'] as const,
   detail: (id: string) => [...transactionKeys.details(), id] as const,
+  tags: (profileId: string) => [...transactionKeys.all, 'tags', profileId] as const,
 };
 
 export function useTransactions(profileId: string | undefined, filter: TransactionFilter = {}) {
@@ -46,5 +47,14 @@ export function useDeleteTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
     },
+  });
+}
+
+export function useTags(profileId: string | undefined) {
+  return useQuery({
+    queryKey: transactionKeys.tags(profileId ?? ''),
+    queryFn: () => transactionsApi.getTags(profileId!),
+    enabled: !!profileId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - tags don't change often
   });
 }
