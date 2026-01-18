@@ -74,11 +74,9 @@ export function AskPage() {
     executeQuery(question, {
       onSuccess: (result) => {
         const id = crypto.randomUUID();
-        // Default to chart view if result supports it
-        const defaultView = result.resultType === 'Chart' || 
-          (result.resultType === 'Table' && canShowAsChart(result.data as Record<string, unknown>[])) 
-            ? 'chart' 
-            : 'table';
+        const rows = result.data as Record<string, unknown>[];
+        const supportsChart = canShowAsChart(rows);
+        const defaultView: 'table' | 'chart' = supportsChart ? 'chart' : 'table';
         setHistory((prev) => [{ ...result, id }, ...prev]);
         setViewModes((prev) => ({ ...prev, [id]: defaultView }));
         setQuestion('');
