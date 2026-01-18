@@ -51,9 +51,6 @@ public class MemoryCacheService : ICacheService
             options.RegisterPostEvictionCallback((k, v, r, s) =>
             {
                 _keys.TryRemove(k.ToString()!, out _);
-                // Clean up lock when cache entry is evicted
-                _locks.TryRemove(k.ToString()!, out var lockToDispose);
-                lockToDispose?.Dispose();
             });
 
             _cache.Set(key, value, options);
@@ -71,11 +68,7 @@ public class MemoryCacheService : ICacheService
     {
         _keys.TryRemove(key, out _);
         _cache.Remove(key);
-        // Clean up lock when manually removing
-        if (_locks.TryRemove(key, out var lockToDispose))
-        {
-            lockToDispose.Dispose();
-        }
+        // Note: Lock cleanup is handled by PostEvictionCallback to avoid race conditions
     }
 
     public void RemoveByPrefix(string prefix)
