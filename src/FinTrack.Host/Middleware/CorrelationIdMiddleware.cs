@@ -72,14 +72,7 @@ public class CorrelationIdMiddleware
     private static bool IsValidCorrelationId(string value)
     {
         // Allow alphanumeric characters, dashes, and underscores (common in trace IDs and GUIDs)
-        foreach (var c in value)
-        {
-            if (!char.IsLetterOrDigit(c) && c != '-' && c != '_')
-            {
-                return false;
-            }
-        }
-        return true;
+        return value.All(static c => char.IsLetterOrDigit(c) || c == '-' || c == '_');
     }
 }
 
