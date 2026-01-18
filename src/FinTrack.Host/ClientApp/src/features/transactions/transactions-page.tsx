@@ -143,12 +143,13 @@ export function TransactionsPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
               <Input
                 placeholder="Search transactions..."
                 value={filter.search ?? ''}
                 onChange={(e) => handleFilterChange('search', e.target.value || undefined)}
                 className="pl-10"
+                aria-label="Search transactions"
               />
             </div>
 
@@ -216,8 +217,9 @@ export function TransactionsPage() {
 
               {/* Date Range */}
               <div>
-                <Label className="text-sm">From Date</Label>
+                <Label htmlFor="from-date" className="text-sm">From Date</Label>
                 <Input
+                  id="from-date"
                   type="date"
                   value={filter.fromDate ?? ''}
                   onChange={(e) => handleFilterChange('fromDate', e.target.value || undefined)}
@@ -226,8 +228,9 @@ export function TransactionsPage() {
               </div>
 
               <div>
-                <Label className="text-sm">To Date</Label>
+                <Label htmlFor="to-date" className="text-sm">To Date</Label>
                 <Input
+                  id="to-date"
                   type="date"
                   value={filter.toDate ?? ''}
                   onChange={(e) => handleFilterChange('toDate', e.target.value || undefined)}
@@ -237,8 +240,9 @@ export function TransactionsPage() {
 
               {/* Amount Range */}
               <div>
-                <Label className="text-sm">Min Amount</Label>
+                <Label htmlFor="min-amount" className="text-sm">Min Amount</Label>
                 <Input
+                  id="min-amount"
                   type="number"
                   step="0.01"
                   placeholder="0.00"
@@ -249,8 +253,9 @@ export function TransactionsPage() {
               </div>
 
               <div>
-                <Label className="text-sm">Max Amount</Label>
+                <Label htmlFor="max-amount" className="text-sm">Max Amount</Label>
                 <Input
+                  id="max-amount"
                   type="number"
                   step="0.01"
                   placeholder="0.00"

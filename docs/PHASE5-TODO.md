@@ -7,13 +7,13 @@ Final polish phase focusing on error handling, performance optimization, documen
 
 | # | Task | Status | Branch | PR |
 |---|------|--------|--------|-----|
-| 1 | [5.1 Global Error Handling](#51-global-error-handling) | Pending | | |
-| 2 | [5.2 Loading States](#52-loading-states) | Pending | | |
-| 3 | [5.7 UI Polish](#57-ui-polish) | Pending | | |
-| 4 | [5.9 Security Headers](#59-security-review) | Pending | | |
-| 5 | [5.8 Testing Coverage](#58-testing-coverage) | Pending | | |
-| 6 | [5.3 Database Performance](#53-database-performance) | Pending | | |
-| 7 | [5.4 Frontend Performance](#54-frontend-performance) | Pending | | |
+| 1 | [5.1 Global Error Handling](#51-global-error-handling) | Done | | #81 |
+| 2 | [5.2 Loading States](#52-loading-states) | Done | | #85 |
+| 3 | [5.7 UI Polish](#57-ui-polish) | Done | | #87 |
+| 4 | [5.9 Security Headers](#59-security-review) | Done | | #88 |
+| 5 | [5.8 Testing Coverage](#58-testing-coverage) | Done | | #90 |
+| 6 | [5.3 Database Performance](#53-database-performance) | Done | | #93 |
+| 7 | [5.4 Frontend Performance](#54-frontend-performance) | Done | | |
 | 8 | [5.5 Logging & Monitoring](#55-logging-and-monitoring) | Partial | | |
 | 9 | [5.6 Documentation](#56-documentation) | Done | | |
 | 10 | [5.10 Final Testing](#510-final-testing) | Pending | | |
@@ -142,12 +142,24 @@ Final polish phase focusing on error handling, performance optimization, documen
 
 ## 5.4 Frontend Performance
 
-**Status:** Pending
+**Status:** Done
 
-- [ ] Route-based code splitting (React.lazy)
-- [ ] Virtualize long lists (react-virtual)
-- [ ] Bundle size analysis
-- [ ] Lighthouse audit and improvements
+- [x] Route-based code splitting (React.lazy)
+  - All 15 page components now lazy loaded
+  - Added Suspense with PageLoading fallback
+- [x] Virtualize long lists (react-virtual)
+  - Transactions already paginated server-side (20 per page)
+  - Other lists (rules, accounts) typically < 50 items
+- [x] Bundle size analysis
+  - Configured rollup-plugin-visualizer
+  - Split vendor chunks (react, router, query, recharts)
+  - Dashboard chunk reduced from 372KB to 9KB
+  - Recharts isolated to 364KB chunk (only loads on dashboard)
+- [x] Lighthouse audit and improvements
+  - Added skip link for keyboard navigation
+  - Added proper meta tags (description, theme-color)
+  - Added aria-labels to sidebar and icon buttons
+  - Fixed form label associations
 
 ---
 

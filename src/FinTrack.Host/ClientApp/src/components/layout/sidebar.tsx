@@ -49,10 +49,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           'dark:border-gray-700 dark:bg-gray-800',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
+        aria-label="Main navigation"
       >
         <div className="flex h-16 items-center justify-between px-4 lg:hidden">
           <span className="text-xl font-bold text-blue-600">FinTrack</span>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close menu">
             <X className="h-5 w-5" />
           </Button>
         </div>
