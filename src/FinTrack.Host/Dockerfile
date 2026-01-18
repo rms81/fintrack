@@ -11,6 +11,7 @@ COPY Directory.Build.props .
 COPY src/FinTrack.Host/FinTrack.Host.csproj src/FinTrack.Host/
 COPY src/FinTrack.Core/FinTrack.Core.csproj src/FinTrack.Core/
 COPY src/FinTrack.Infrastructure/FinTrack.Infrastructure.csproj src/FinTrack.Infrastructure/
+COPY src/FinTrack.ServiceDefaults/FinTrack.ServiceDefaults.csproj src/FinTrack.ServiceDefaults/
 
 # Restore dependencies
 RUN dotnet restore src/FinTrack.Host/FinTrack.Host.csproj
@@ -19,23 +20,27 @@ RUN dotnet restore src/FinTrack.Host/FinTrack.Host.csproj
 COPY src/FinTrack.Host/ src/FinTrack.Host/
 COPY src/FinTrack.Core/ src/FinTrack.Core/
 COPY src/FinTrack.Infrastructure/ src/FinTrack.Infrastructure/
+COPY src/FinTrack.ServiceDefaults/ src/FinTrack.ServiceDefaults/
 
 # Build application
-RUN dotnet publish src/FinTrack.Host/FinTrack.Host.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish src/FinTrack.Host/FinTrack.Host.csproj -c Release -o /app/publish
 
 # Stage 2: Build React application
 FROM node:22-alpine AS frontend
 WORKDIR /app
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
 # Copy package files
-COPY src/FinTrack.Host/ClientApp/package*.json ./
+COPY src/FinTrack.Host/ClientApp/package.json src/FinTrack.Host/ClientApp/pnpm-lock.yaml ./
 
 # Install dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Copy source and build
 COPY src/FinTrack.Host/ClientApp/ ./
-RUN npm run build
+RUN pnpm build
 
 # Stage 3: Runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
