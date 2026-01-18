@@ -203,6 +203,7 @@ export function AskPage() {
                       result={result} 
                       currency={currency} 
                       viewMode={viewModes[result.id] || 'table'}
+                      supportsChart={chartSupport[result.id] || false}
                     />
 
                     {/* Explanation */}
@@ -253,11 +254,13 @@ export function AskPage() {
 function NlqResultDisplay({ 
   result, 
   currency, 
-  viewMode = 'table' 
+  viewMode = 'table',
+  supportsChart = false
 }: { 
   result: NlqResponse; 
   currency: string; 
   viewMode?: 'table' | 'chart';
+  supportsChart?: boolean;
 }) {
   if (result.resultType === 'Scalar') {
     const value = result.data as number | string;
@@ -285,7 +288,7 @@ function NlqResultDisplay({
     }
 
     // Show chart if view mode is chart and data supports it
-    if (viewMode === 'chart' && canShowAsChart(rows)) {
+    if (viewMode === 'chart' && supportsChart) {
       return <NlqChartDisplay rows={rows} chartType={result.chartType} currency={currency} />;
     }
 
@@ -360,12 +363,14 @@ function NlqChartDisplay({
   const columns = Object.keys(rows[0]);
   
   // Find label column: prefer columns where majority of values are non-numeric
+  // Sample rows for efficiency if dataset is large (only check first 20 rows for type detection)
+  const sampleSize = Math.min(rows.length, 20);
+  const sampleRows = rows.slice(0, sampleSize);
+  
   const labelColumn = columns.find(col => {
-    const nonNumericCount = rows.filter(row => typeof row[col] !== 'number').length;
-    return nonNumericCount > rows.length / 2;
-  }) || columns.find(col => 
-    rows.every(row => typeof row[col] !== 'number')
-  ) || columns[0];
+    const nonNumericCount = sampleRows.filter(row => typeof row[col] !== 'number').length;
+    return nonNumericCount > sampleSize / 2;
+  }) || columns[0];
   
   const valueColumns = columns.filter(col => 
     col !== labelColumn && rows.some(row => typeof row[col] === 'number')
