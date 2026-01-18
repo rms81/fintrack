@@ -10,6 +10,7 @@ public class MemoryCacheService : ICacheService
 {
     private readonly IMemoryCache _cache;
     private readonly ConcurrentDictionary<string, byte> _keys = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
     private static readonly TimeSpan DefaultExpiration = TimeSpan.FromMinutes(5);
 
     public MemoryCacheService(IMemoryCache cache)
@@ -28,28 +29,53 @@ public class MemoryCacheService : ICacheService
             return cached!;
         }
 
-        var value = await factory(ct);
+        // Acquire a lock for this specific key to prevent cache stampede
+        var semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        await semaphore.WaitAsync(ct);
 
-        var options = new MemoryCacheEntryOptions
+        try
         {
-            AbsoluteExpirationRelativeToNow = absoluteExpiration ?? DefaultExpiration
-        };
+            // Double-check after acquiring lock - another thread may have populated the cache
+            if (_cache.TryGetValue(key, out cached))
+            {
+                return cached!;
+            }
 
-        options.RegisterPostEvictionCallback((k, v, r, s) =>
+            var value = await factory(ct);
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = absoluteExpiration ?? DefaultExpiration
+            };
+
+            options.RegisterPostEvictionCallback((k, v, r, s) =>
+            {
+                _keys.TryRemove(k.ToString()!, out _);
+                // Clean up lock when cache entry is evicted
+                _locks.TryRemove(k.ToString()!, out var lockToDispose);
+                lockToDispose?.Dispose();
+            });
+
+            _cache.Set(key, value, options);
+            _keys.TryAdd(key, 0);
+
+            return value;
+        }
+        finally
         {
-            _keys.TryRemove(k.ToString()!, out _);
-        });
-
-        _cache.Set(key, value, options);
-        _keys.TryAdd(key, 0);
-
-        return value;
+            semaphore.Release();
+        }
     }
 
     public void Remove(string key)
     {
-        _cache.Remove(key);
         _keys.TryRemove(key, out _);
+        _cache.Remove(key);
+        // Clean up lock when manually removing
+        if (_locks.TryRemove(key, out var lockToDispose))
+        {
+            lockToDispose.Dispose();
+        }
     }
 
     public void RemoveByPrefix(string prefix)
