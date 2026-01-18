@@ -73,9 +73,8 @@ public class MemoryCacheService : ICacheService
 
     public void Remove(string key)
     {
-        _keys.TryRemove(key, out _);
+        // Let the eviction callback handle all cleanup (_keys and _locks)
         _cache.Remove(key);
-        // Note: Lock cleanup is handled by PostEvictionCallback to avoid race conditions
     }
 
     public void RemoveByPrefix(string prefix)
