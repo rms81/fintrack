@@ -86,7 +86,7 @@ export function AskPage() {
                 className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isPending}
               />
-              <Button type="submit" disabled={!question.trim() || isPending}>
+              <Button type="submit" disabled={!question.trim() || isPending} aria-label="Send question">
                 {isPending ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (

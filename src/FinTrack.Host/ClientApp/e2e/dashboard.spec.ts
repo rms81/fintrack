@@ -9,8 +9,9 @@ test.describe('Dashboard', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
 
-    await expect(page.getByText(/income/i)).toBeVisible();
-    await expect(page.getByText(/expenses/i)).toBeVisible();
-    await expect(page.getByText(/net balance/i)).toBeVisible();
+    // Use exact match for summary card headings to avoid matching chart titles
+    await expect(page.getByRole('heading', { name: 'Income', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Expenses', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Net Balance', exact: true })).toBeVisible();
   });
 });
