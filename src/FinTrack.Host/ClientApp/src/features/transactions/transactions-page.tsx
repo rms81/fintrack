@@ -9,7 +9,6 @@ import {
   AlertCircle,
   Pencil,
   Trash2,
-  Tag,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -19,7 +18,8 @@ import { SkeletonTable } from '../../components/ui/skeleton';
 import { useActiveProfile } from '../../hooks/use-active-profile';
 import { useAccounts } from '../../hooks/use-accounts';
 import { useCategories } from '../../hooks/use-categories';
-import { useTransactions, useUpdateTransaction, useDeleteTransaction } from '../../hooks/use-transactions';
+import { useTransactions, useUpdateTransaction, useDeleteTransaction, useTags } from '../../hooks/use-transactions';
+import { TagInput, TagDisplay } from '../../components/ui/tag-input';
 import type { TransactionFilter, Transaction, Category, Account } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
 
@@ -29,6 +29,7 @@ export function TransactionsPage() {
   const { activeProfileId } = useActiveProfile();
   const { data: accounts } = useAccounts(activeProfileId ?? undefined);
   const { data: categories } = useCategories(activeProfileId ?? undefined);
+  const { data: existingTags } = useTags(activeProfileId ?? undefined);
 
   const [filter, setFilter] = useState<TransactionFilter>({
     page: 1,
@@ -37,6 +38,7 @@ export function TransactionsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [editingTags, setEditingTags] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; transactionId: string | null; description: string | null }>({
     show: false,
     transactionId: null,
@@ -84,19 +86,35 @@ export function TransactionsPage() {
     setFilter(prev => ({ ...prev, page: newPage }));
   };
 
-  const handleUpdateCategory = async () => {
+  const handleUpdateTransaction = async () => {
     if (!editingTransaction) return;
 
     try {
       await updateMutation.mutateAsync({
         id: editingTransaction.id,
-        data: { categoryId: selectedCategoryId },
+        data: { 
+          categoryId: selectedCategoryId,
+          tags: editingTags,
+        },
       });
       setEditingTransaction(null);
       setSelectedCategoryId(null);
+      setEditingTags([]);
     } catch (error) {
       console.error('Failed to update transaction:', error);
     }
+  };
+
+  const startEditing = (tx: Transaction) => {
+    setEditingTransaction(tx);
+    setSelectedCategoryId(tx.categoryId);
+    setEditingTags(tx.tags ?? []);
+  };
+
+  const cancelEditing = () => {
+    setEditingTransaction(null);
+    setSelectedCategoryId(null);
+    setEditingTags([]);
   };
 
   const handleDelete = async () => {
@@ -335,7 +353,7 @@ export function TransactionsPage() {
                   </thead>
                   <tbody className="divide-y">
                     {transactionPage?.items.map((tx) => (
-                      <tr key={tx.id} className="hover:bg-gray-50">
+                      <tr key={tx.id} className={`hover:bg-gray-50 ${editingTransaction?.id === tx.id ? 'bg-blue-50' : ''}`}>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {new Date(tx.date).toLocaleDateString()}
                         </td>
@@ -343,28 +361,29 @@ export function TransactionsPage() {
                           <div className="truncate max-w-xs" title={tx.description}>
                             {tx.description}
                           </div>
-                          {tx.tags.length > 0 && (
-                            <div className="flex gap-1 mt-1">
-                              {tx.tags.slice(0, 3).map(tag => (
-                                <span
-                                  key={tag}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600"
-                                >
-                                  <Tag className="h-3 w-3" />
-                                  {tag}
-                                </span>
-                              ))}
-                              {tx.tags.length > 3 && (
-                                <span className="text-xs text-gray-400">+{tx.tags.length - 3}</span>
-                              )}
+                          {editingTransaction?.id === tx.id ? (
+                            <div className="mt-2">
+                              <Label className="text-xs text-gray-500 mb-1 block">Tags</Label>
+                              <TagInput
+                                tags={editingTags}
+                                onChange={setEditingTags}
+                                suggestions={existingTags ?? []}
+                                placeholder="Add tags..."
+                              />
                             </div>
+                          ) : (
+                            tx.tags && tx.tags.length > 0 && (
+                              <div className="mt-1">
+                                <TagDisplay tags={tx.tags} />
+                              </div>
+                            )
                           )}
                         </td>
                         <td className="px-4 py-3">
                           {editingTransaction?.id === tx.id ? (
-                            <div className="flex items-center gap-2">
+                            <div className="space-y-2">
                               <select
-                                className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm"
+                                className="w-full rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm"
                                 value={selectedCategoryId ?? ''}
                                 onChange={(e) => setSelectedCategoryId(e.target.value || null)}
                               >
@@ -375,30 +394,26 @@ export function TransactionsPage() {
                                   </option>
                                 ))}
                               </select>
-                              <Button
-                                size="sm"
-                                onClick={handleUpdateCategory}
-                                loading={updateMutation.isPending}
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setEditingTransaction(null);
-                                  setSelectedCategoryId(null);
-                                }}
-                              >
-                                Cancel
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={handleUpdateTransaction}
+                                  loading={updateMutation.isPending}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={cancelEditing}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
                             </div>
                           ) : (
                             <button
-                              onClick={() => {
-                                setEditingTransaction(tx);
-                                setSelectedCategoryId(tx.categoryId);
-                              }}
+                              onClick={() => startEditing(tx)}
                               className="group flex items-center gap-1 text-left hover:text-blue-600 transition-colors"
                             >
                               {tx.categoryId ? (
@@ -429,10 +444,7 @@ export function TransactionsPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => {
-                                setEditingTransaction(tx);
-                                setSelectedCategoryId(tx.categoryId);
-                              }}
+                              onClick={() => startEditing(tx)}
                               title="Edit category"
                             >
                               <Pencil className="h-4 w-4" />

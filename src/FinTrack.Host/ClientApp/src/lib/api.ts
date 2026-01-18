@@ -212,6 +212,9 @@ export const transactionsApi = {
     request<void>(`/transactions/${id}`, {
       method: 'DELETE',
     }),
+
+  getTags: (profileId: string) =>
+    request<string[]>(`/profiles/${profileId}/tags`),
 };
 
 // Import API
