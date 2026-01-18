@@ -43,6 +43,7 @@ export function AskPage() {
   const [showSql, setShowSql] = useState<Record<string, boolean>>({});
   const [history, setHistory] = useState<NlqHistoryItem[]>([]);
   const [viewModes, setViewModes] = useState<Record<string, 'table' | 'chart'>>({});
+  const [chartSupport, setChartSupport] = useState<Record<string, boolean>>({});
 
   const { mutate: executeQuery, isPending } = useNlqMutation(activeProfileId ?? undefined);
   const { data: suggestions } = useNlqSuggestions(activeProfileId ?? undefined);
@@ -79,6 +80,7 @@ export function AskPage() {
         const defaultView: 'table' | 'chart' = supportsChart ? 'chart' : 'table';
         setHistory((prev) => [{ ...result, id }, ...prev]);
         setViewModes((prev) => ({ ...prev, [id]: defaultView }));
+        setChartSupport((prev) => ({ ...prev, [id]: supportsChart }));
         setQuestion('');
       },
     });
@@ -165,8 +167,8 @@ export function AskPage() {
                   <div className="space-y-4">
                     {/* View Toggle for Table/Chart results */}
                     {(result.resultType === 'Table' || result.resultType === 'Chart') && 
-                     canShowAsChart(result.data as Record<string, unknown>[]) && (
-                      <div className="flex gap-1">
+                     chartSupport[result.id] && (
+                      <div className="flex gap-1" role="group" aria-label="View mode toggle">
                         <button
                           onClick={() => setViewModes((prev) => ({ ...prev, [result.id]: 'chart' }))}
                           className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
@@ -174,8 +176,10 @@ export function AskPage() {
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
+                          aria-label="Show chart view"
+                          aria-pressed={viewModes[result.id] === 'chart'}
                         >
-                          <BarChart3 className="h-4 w-4" />
+                          <BarChart3 className="h-4 w-4" aria-hidden="true" />
                           Chart
                         </button>
                         <button
@@ -185,8 +189,10 @@ export function AskPage() {
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
+                          aria-label="Show table view"
+                          aria-pressed={viewModes[result.id] === 'table'}
                         >
-                          <Table2 className="h-4 w-4" />
+                          <Table2 className="h-4 w-4" aria-hidden="true" />
                           Table
                         </button>
                       </div>
@@ -353,8 +359,11 @@ function NlqChartDisplay({
 }) {
   const columns = Object.keys(rows[0]);
   
-  // Find label column (first non-numeric) and value columns (numeric)
-  const labelColumn = columns.find(col => 
+  // Find label column: prefer columns where majority of values are non-numeric
+  const labelColumn = columns.find(col => {
+    const nonNumericCount = rows.filter(row => typeof row[col] !== 'number').length;
+    return nonNumericCount > rows.length / 2;
+  }) || columns.find(col => 
     rows.every(row => typeof row[col] !== 'number')
   ) || columns[0];
   
