@@ -25,7 +25,7 @@ public class CorrelationIdMiddleware
         var correlationId = GetOrCreateCorrelationId(context);
 
         // Set the correlation ID on the Activity for OpenTelemetry
-        Activity.Current?.SetBaggage("correlation-id", correlationId);
+        Activity.Current?.SetBaggage("CorrelationId", correlationId);
 
         // Add correlation ID to response headers
         context.Response.OnStarting(() =>
@@ -50,7 +50,13 @@ public class CorrelationIdMiddleware
         if (context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId)
             && !string.IsNullOrWhiteSpace(correlationId))
         {
-            return correlationId.ToString();
+            var value = correlationId.ToString();
+            
+            // Validate correlation ID: must be reasonable length and alphanumeric/dash/underscore
+            if (value.Length <= 128 && IsValidCorrelationId(value))
+            {
+                return value;
+            }
         }
 
         // Use trace ID from Activity if available (OpenTelemetry)
@@ -61,6 +67,19 @@ public class CorrelationIdMiddleware
 
         // Fall back to generating a new GUID
         return Guid.NewGuid().ToString("N");
+    }
+
+    private static bool IsValidCorrelationId(string value)
+    {
+        // Allow alphanumeric characters, dashes, and underscores (common in trace IDs and GUIDs)
+        foreach (var c in value)
+        {
+            if (!char.IsLetterOrDigit(c) && c != '-' && c != '_')
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

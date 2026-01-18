@@ -29,38 +29,22 @@ public class RequestLoggingMiddleware
         var stopwatch = Stopwatch.StartNew();
         var requestId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
 
-        try
-        {
-            await _next(context);
-            stopwatch.Stop();
+        await _next(context);
+        stopwatch.Stop();
 
-            var level = context.Response.StatusCode >= 500 ? LogLevel.Error
-                : context.Response.StatusCode >= 400 ? LogLevel.Warning
-                : LogLevel.Information;
+        var level = context.Response.StatusCode >= 500 ? LogLevel.Error
+            : context.Response.StatusCode >= 400 ? LogLevel.Warning
+            : LogLevel.Information;
 
-            _logger.Log(
-                level,
-                "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMs}ms | RequestId: {RequestId} | User: {User}",
-                context.Request.Method,
-                context.Request.Path,
-                context.Response.StatusCode,
-                stopwatch.ElapsedMilliseconds,
-                requestId,
-                context.User.Identity?.Name ?? "anonymous");
-        }
-        catch (Exception)
-        {
-            stopwatch.Stop();
-
-            _logger.LogError(
-                "HTTP {Method} {Path} threw exception after {ElapsedMs}ms | RequestId: {RequestId}",
-                context.Request.Method,
-                context.Request.Path,
-                stopwatch.ElapsedMilliseconds,
-                requestId);
-
-            throw;
-        }
+        _logger.Log(
+            level,
+            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMs}ms | RequestId: {RequestId} | User: {User}",
+            context.Request.Method,
+            context.Request.Path,
+            context.Response.StatusCode,
+            stopwatch.ElapsedMilliseconds,
+            requestId,
+            context.User.Identity?.Name ?? "anonymous");
     }
 
     private static bool IsHealthCheckEndpoint(PathString path)
