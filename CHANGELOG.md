@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical Stack
 - Backend: .NET 10, ASP.NET Core Minimal APIs, Wolverine FX, EF Core
 - Frontend: React 19, TanStack Query, Tailwind CSS, Recharts
-- Database: PostgreSQL 17
+- Database: PostgreSQL 18
 - Infrastructure: Docker, .NET Aspire
 
 ---
