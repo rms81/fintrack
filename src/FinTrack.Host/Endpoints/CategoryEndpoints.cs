@@ -206,9 +206,10 @@ public static class CategoryEndpoints
 
         // Invalidate categories and dashboard caches (category name may appear in dashboard)
         cache.Remove(CacheKeys.Categories(profileId));
-        cache.RemoveByPrefix($"fintrack:dashboard:summary:{profileId}:");
-        cache.RemoveByPrefix($"fintrack:dashboard:category-spending:{profileId}:");
-        cache.RemoveByPrefix($"fintrack:dashboard:top-merchants:{profileId}:");
+        foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+        {
+            cache.RemoveByPrefix(prefix);
+        }
 
         var transactionCount = await db.Transactions.CountAsync(t => t.CategoryId == category.Id, ct);
 
@@ -256,9 +257,10 @@ public static class CategoryEndpoints
 
         // Invalidate categories and dashboard caches
         cache.Remove(CacheKeys.Categories(profileId));
-        cache.RemoveByPrefix($"fintrack:dashboard:summary:{profileId}:");
-        cache.RemoveByPrefix($"fintrack:dashboard:category-spending:{profileId}:");
-        cache.RemoveByPrefix($"fintrack:dashboard:top-merchants:{profileId}:");
+        foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+        {
+            cache.RemoveByPrefix(prefix);
+        }
 
         return Results.NoContent();
     }

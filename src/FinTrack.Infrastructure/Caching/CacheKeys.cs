@@ -50,4 +50,15 @@ public static class CacheKeys
     /// </remarks>
     [Obsolete("Wildcard pattern is not compatible with RemoveByPrefix and is not used. Do not use this method for cache invalidation.")]
     public static string ProfilePattern(Guid profileId) => $"{Prefix}:*:{profileId}:*";
+
+    /// <summary>
+    /// Get all dashboard cache key prefixes for a profile (for invalidation).
+    /// </summary>
+    /// <returns>Array of prefixes to pass to RemoveByPrefix</returns>
+    public static string[] DashboardPrefixes(Guid profileId) =>
+    [
+        $"{Prefix}:dashboard:summary:{profileId}:",
+        $"{Prefix}:dashboard:category-spending:{profileId}:",
+        $"{Prefix}:dashboard:top-merchants:{profileId}:"
+    ];
 }
