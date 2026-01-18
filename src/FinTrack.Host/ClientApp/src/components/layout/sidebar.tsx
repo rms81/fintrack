@@ -58,7 +58,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </Button>
         </div>
 
-        <nav className="flex flex-col gap-1 p-4" role="navigation">
+        <nav className="flex flex-col gap-1 p-4">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
