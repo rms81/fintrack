@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace FinTrack.Infrastructure;
 
@@ -48,6 +49,14 @@ public static class DependencyInjection
 
         // Register Export Service
         services.AddScoped<IExportService, ExportService>();
+
+        // Register health checks for database readiness
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            services.AddHealthChecks()
+                .AddNpgSql(connectionString, name: "database", tags: ["ready"]);
+        }
 
         // Register LLM Service (OpenRouter or Stub)
         var llmSection = configuration.GetSection(LlmOptions.Section);

@@ -74,11 +74,19 @@ public static class Extensions
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
         // Health check endpoints
+        // /health - Full health check (all registered checks)
         app.MapHealthChecks("/health");
 
+        // /alive - Liveness probe (is the process running?)
         app.MapHealthChecks("/alive", new HealthCheckOptions
         {
             Predicate = r => r.Tags.Contains("live")
+        });
+
+        // /ready - Readiness probe (is the app ready to serve traffic?)
+        app.MapHealthChecks("/ready", new HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("ready")
         });
 
         return app;

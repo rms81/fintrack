@@ -2,6 +2,7 @@ using FinTrack.Core.Features.Example;
 using FinTrack.Host.Auth;
 using FinTrack.Host.Endpoints;
 using FinTrack.Host.Exceptions;
+using FinTrack.Host.Middleware;
 using FinTrack.Host.Security;
 using FinTrack.Infrastructure;
 using FinTrack.Infrastructure.Persistence;
@@ -71,6 +72,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline
+app.UseCorrelationId();
+app.UseRequestLogging();
 app.UseAppExceptionHandler();
 app.UseSecurityHeaders();
 
