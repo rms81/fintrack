@@ -331,16 +331,17 @@ function NlqResultDisplay({
 // Check if data can be displayed as a chart (needs a label column and at least one numeric column)
 function canShowAsChart(rows: Record<string, unknown>[] | undefined): boolean {
   if (!rows || rows.length === 0) return false;
-  
+
   const columns = Object.keys(rows[0]);
   if (columns.length < 2) return false;
-  
+
   // Need at least one numeric column for values
-  const hasNumericColumn = columns.some(col => 
+  const hasNumericColumn = columns.some(col =>
     rows.some(row => typeof row[col] === 'number')
   );
-  
-  return hasNumericColumn && rows.length <= 20; // Limit chart to 20 items
+
+  // Chart eligibility is based on structure and data types, not total row count
+  return hasNumericColumn;
 }
 
 function NlqChartDisplay({ 
