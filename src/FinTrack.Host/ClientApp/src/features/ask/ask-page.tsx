@@ -407,7 +407,7 @@ function NlqChartDisplay({
               ))}
             </Pie>
             <Tooltip 
-              formatter={(value) => formatCurrency(Math.abs(Number(value ?? 0)), currency)}
+              formatter={(value) => formatCurrency(Number(value ?? 0), currency)}
             />
             <Legend />
           </PieChart>
