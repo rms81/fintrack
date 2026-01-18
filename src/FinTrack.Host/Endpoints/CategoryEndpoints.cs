@@ -1,6 +1,7 @@
 using FinTrack.Core.Domain.Entities;
 using FinTrack.Core.Features.Categories;
 using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Caching;
 using FinTrack.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public static class CategoryEndpoints
         [FromBody] CreateCategoryRequest request,
         FinTrackDbContext db,
         ICurrentUser currentUser,
+        ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -60,6 +62,9 @@ public static class CategoryEndpoints
         db.Categories.Add(category);
         await db.SaveChangesAsync(ct);
 
+        // Invalidate categories cache
+        cache.Remove(CacheKeys.Categories(profileId));
+
         var result = new CategoryDto(
             category.Id,
             category.Name,
@@ -85,6 +90,7 @@ public static class CategoryEndpoints
         Guid profileId,
         FinTrackDbContext db,
         ICurrentUser currentUser,
+        ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -96,21 +102,26 @@ public static class CategoryEndpoints
         if (!profileExists)
             return Results.NotFound();
 
-        var categories = await db.Categories
-            .Where(c => c.ProfileId == profileId)
-            .OrderBy(c => c.SortOrder)
-            .ThenBy(c => c.Name)
-            .Select(c => new CategoryDto(
-                c.Id,
-                c.Name,
-                c.Icon,
-                c.Color,
-                c.SortOrder,
-                c.ParentId,
-                c.Transactions.Count,
-                c.CreatedAt,
-                c.UpdatedAt))
-            .ToListAsync(ct);
+        var cacheKey = CacheKeys.Categories(profileId);
+        var categories = await cache.GetOrCreateAsync(
+            cacheKey,
+            async ct => await db.Categories
+                .Where(c => c.ProfileId == profileId)
+                .OrderBy(c => c.SortOrder)
+                .ThenBy(c => c.Name)
+                .Select(c => new CategoryDto(
+                    c.Id,
+                    c.Name,
+                    c.Icon,
+                    c.Color,
+                    c.SortOrder,
+                    c.ParentId,
+                    c.Transactions.Count,
+                    c.CreatedAt,
+                    c.UpdatedAt))
+                .ToListAsync(ct),
+            TimeSpan.FromMinutes(10),
+            ct);
 
         return Results.Ok(categories);
     }
@@ -163,6 +174,7 @@ public static class CategoryEndpoints
         [FromBody] UpdateCategoryRequest request,
         FinTrackDbContext db,
         ICurrentUser currentUser,
+        ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -192,6 +204,13 @@ public static class CategoryEndpoints
 
         await db.SaveChangesAsync(ct);
 
+        // Invalidate categories and dashboard caches (category name may appear in dashboard)
+        cache.Remove(CacheKeys.Categories(profileId));
+        foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+        {
+            cache.RemoveByPrefix(prefix);
+        }
+
         var transactionCount = await db.Transactions.CountAsync(t => t.CategoryId == category.Id, ct);
 
         var result = new CategoryDto(
@@ -220,6 +239,7 @@ public static class CategoryEndpoints
         Guid id,
         [FromServices] FinTrackDbContext db,
         [FromServices] ICurrentUser currentUser,
+        [FromServices] ICacheService cache,
         CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -234,6 +254,13 @@ public static class CategoryEndpoints
 
         db.Categories.Remove(category);
         await db.SaveChangesAsync(ct);
+
+        // Invalidate categories and dashboard caches
+        cache.Remove(CacheKeys.Categories(profileId));
+        foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+        {
+            cache.RemoveByPrefix(prefix);
+        }
 
         return Results.NoContent();
     }

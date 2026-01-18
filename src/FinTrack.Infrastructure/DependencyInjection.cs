@@ -1,4 +1,5 @@
 using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Caching;
 using FinTrack.Infrastructure.Options;
 using FinTrack.Infrastructure.Persistence;
 using FinTrack.Infrastructure.Services;
@@ -28,6 +29,10 @@ public static class DependencyInjection
             // Suppress warning about pending model changes (occurs with manually created migrations)
             options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
+
+        // Register caching
+        services.AddMemoryCache();
+        services.AddSingleton<ICacheService, MemoryCacheService>();
 
         // Register Rules Engine
         services.AddScoped<IRulesEngine, RulesEngine>();

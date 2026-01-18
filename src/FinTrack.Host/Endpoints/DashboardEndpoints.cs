@@ -1,5 +1,6 @@
 using FinTrack.Core.Features.Dashboard;
 using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Caching;
 using FinTrack.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ public static class DashboardEndpoints
         [FromQuery] DateOnly? toDate,
         FinTrackDbContext db = null!,
         ICurrentUser currentUser = null!,
+        ICacheService cache = null!,
         CancellationToken ct = default)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -39,6 +41,24 @@ public static class DashboardEndpoints
         var from = fromDate ?? new DateOnly(now.Year, now.Month, 1);
         var to = toDate ?? now;
 
+        var cacheKey = CacheKeys.DashboardSummary(profileId, accountId, from, to);
+        var result = await cache.GetOrCreateAsync(
+            cacheKey,
+            async ct => await ComputeDashboardSummary(db, profileId, accountId, from, to, ct),
+            TimeSpan.FromMinutes(5),
+            ct);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<DashboardSummaryDto> ComputeDashboardSummary(
+        FinTrackDbContext db,
+        Guid profileId,
+        Guid? accountId,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken ct)
+    {
         var query = db.Transactions
             .Where(t => t.Account!.ProfileId == profileId)
             .Where(t => t.Date >= from && t.Date <= to);
@@ -93,7 +113,7 @@ public static class DashboardEndpoints
             ? ((totalExpenses - previousExpenses) / previousExpenses) * 100
             : null;
 
-        var result = new DashboardSummaryDto(
+        return new DashboardSummaryDto(
             totalIncome,
             totalExpenses,
             netBalance,
@@ -103,8 +123,6 @@ public static class DashboardEndpoints
             topCategory?.Total,
             previousExpenses > 0 ? previousExpenses : null,
             expenseChangePercentage);
-
-        return Results.Ok(result);
     }
 
     [WolverineGet("/api/profiles/{profileId}/dashboard/spending-by-category")]
@@ -121,6 +139,7 @@ public static class DashboardEndpoints
         [FromQuery] DateOnly? toDate,
         FinTrackDbContext db = null!,
         ICurrentUser currentUser = null!,
+        ICacheService cache = null!,
         CancellationToken ct = default)
     {
         if (!currentUser.IsAuthenticated || !Guid.TryParse(currentUser.Id, out var userId))
@@ -136,41 +155,49 @@ public static class DashboardEndpoints
         var from = fromDate ?? new DateOnly(now.Year, now.Month, 1);
         var to = toDate ?? now;
 
-        var query = db.Transactions
-            .Where(t => t.Account!.ProfileId == profileId)
-            .Where(t => t.Date >= from && t.Date <= to)
-            .Where(t => t.Amount < 0); // Only expenses
+        var cacheKey = CacheKeys.CategorySpending(profileId, accountId, from, to);
+        var result = await cache.GetOrCreateAsync(
+            cacheKey,
+            async ct =>
+            {
+                var query = db.Transactions
+                    .Where(t => t.Account!.ProfileId == profileId)
+                    .Where(t => t.Date >= from && t.Date <= to)
+                    .Where(t => t.Amount < 0); // Only expenses
 
-        if (accountId.HasValue)
-            query = query.Where(t => t.AccountId == accountId.Value);
+                if (accountId.HasValue)
+                    query = query.Where(t => t.AccountId == accountId.Value);
 
-        var categoryGroups = await query
-            .Include(t => t.Category)
-            .GroupBy(t => new {
-                CategoryId = t.CategoryId ?? Guid.Empty,
-                CategoryName = t.Category != null ? t.Category.Name : "Uncategorized",
-                CategoryColor = t.Category != null ? t.Category.Color : "#9CA3AF"
-            })
-            .Select(g => new {
-                g.Key.CategoryId,
-                g.Key.CategoryName,
-                g.Key.CategoryColor,
-                Amount = Math.Abs(g.Sum(t => t.Amount)),
-                Count = g.Count()
-            })
-            .OrderByDescending(g => g.Amount)
-            .ToListAsync(ct);
+                var categoryGroups = await query
+                    .Include(t => t.Category)
+                    .GroupBy(t => new {
+                        CategoryId = t.CategoryId ?? Guid.Empty,
+                        CategoryName = t.Category != null ? t.Category.Name : "Uncategorized",
+                        CategoryColor = t.Category != null ? t.Category.Color : "#9CA3AF"
+                    })
+                    .Select(g => new {
+                        g.Key.CategoryId,
+                        g.Key.CategoryName,
+                        g.Key.CategoryColor,
+                        Amount = Math.Abs(g.Sum(t => t.Amount)),
+                        Count = g.Count()
+                    })
+                    .OrderByDescending(g => g.Amount)
+                    .ToListAsync(ct);
 
-        var totalSpending = categoryGroups.Sum(g => g.Amount);
+                var totalSpending = categoryGroups.Sum(g => g.Amount);
 
-        var result = categoryGroups.Select(g => new CategorySpendingDto(
-            g.CategoryId,
-            g.CategoryName,
-            g.CategoryColor,
-            g.Amount,
-            totalSpending > 0 ? (g.Amount / totalSpending) * 100 : 0,
-            g.Count
-        )).ToList();
+                return categoryGroups.Select(g => new CategorySpendingDto(
+                    g.CategoryId,
+                    g.CategoryName,
+                    g.CategoryColor,
+                    g.Amount,
+                    totalSpending > 0 ? (g.Amount / totalSpending) * 100 : 0,
+                    g.Count
+                )).ToList();
+            },
+            TimeSpan.FromMinutes(5),
+            ct);
 
         return Results.Ok(result);
     }
@@ -276,6 +303,7 @@ public static class DashboardEndpoints
         [FromQuery] DateOnly? toDate,
         FinTrackDbContext db = null!,
         ICurrentUser currentUser = null!,
+        ICacheService cache = null!,
         [FromQuery] int limit = 10,
         CancellationToken ct = default)
     {
@@ -294,41 +322,49 @@ public static class DashboardEndpoints
 
         limit = Math.Clamp(limit, 1, 50);
 
-        var query = db.Transactions
-            .Where(t => t.Account!.ProfileId == profileId)
-            .Where(t => t.Date >= from && t.Date <= to)
-            .Where(t => t.Amount < 0); // Only expenses
+        var cacheKey = CacheKeys.TopMerchants(profileId, accountId, from, to, limit);
+        var result = await cache.GetOrCreateAsync(
+            cacheKey,
+            async ct =>
+            {
+                var query = db.Transactions
+                    .Where(t => t.Account!.ProfileId == profileId)
+                    .Where(t => t.Date >= from && t.Date <= to)
+                    .Where(t => t.Amount < 0); // Only expenses
 
-        if (accountId.HasValue)
-            query = query.Where(t => t.AccountId == accountId.Value);
+                if (accountId.HasValue)
+                    query = query.Where(t => t.AccountId == accountId.Value);
 
-        // Group by normalized description using database-computed column
-        var merchants = await query
-            .GroupBy(t => EF.Property<string>(t, "NormalizedDescription"))
-            .Select(g => new {
-                Merchant = g.Key,
-                TotalAmount = Math.Abs(g.Sum(t => t.Amount)),
-                TransactionCount = g.Count(),
-                LastTransactionDate = g.Max(t => t.Date),
-                // Get most common category name
-                MostCommonCategory = g
-                    .Where(t => t.CategoryId != null)
-                    .GroupBy(t => t.Category!.Name)
-                    .OrderByDescending(cg => cg.Count())
-                    .Select(cg => cg.Key)
-                    .FirstOrDefault()
-            })
-            .OrderByDescending(m => m.TotalAmount)
-            .Take(limit)
-            .ToListAsync(ct);
+                // Group by normalized description using database-computed column
+                var merchants = await query
+                    .GroupBy(t => EF.Property<string>(t, "NormalizedDescription"))
+                    .Select(g => new {
+                        Merchant = g.Key,
+                        TotalAmount = Math.Abs(g.Sum(t => t.Amount)),
+                        TransactionCount = g.Count(),
+                        LastTransactionDate = g.Max(t => t.Date),
+                        // Get most common category name
+                        MostCommonCategory = g
+                            .Where(t => t.CategoryId != null)
+                            .GroupBy(t => t.Category!.Name)
+                            .OrderByDescending(cg => cg.Count())
+                            .Select(cg => cg.Key)
+                            .FirstOrDefault()
+                    })
+                    .OrderByDescending(m => m.TotalAmount)
+                    .Take(limit)
+                    .ToListAsync(ct);
 
-        var result = merchants.Select(m => new TopMerchantDto(
-            m.Merchant,
-            m.TotalAmount,
-            m.TransactionCount,
-            m.LastTransactionDate,
-            m.MostCommonCategory
-        )).ToList();
+                return merchants.Select(m => new TopMerchantDto(
+                    m.Merchant,
+                    m.TotalAmount,
+                    m.TransactionCount,
+                    m.LastTransactionDate,
+                    m.MostCommonCategory
+                )).ToList();
+            },
+            TimeSpan.FromMinutes(5),
+            ct);
 
         return Results.Ok(result);
     }
