@@ -14,7 +14,7 @@ Final polish phase focusing on error handling, performance optimization, documen
 | 5 | [5.8 Testing Coverage](#58-testing-coverage) | Done | | #90 |
 | 6 | [5.3 Database Performance](#53-database-performance) | Done | | #93 |
 | 7 | [5.4 Frontend Performance](#54-frontend-performance) | Done | | |
-| 8 | [5.5 Logging & Monitoring](#55-logging-and-monitoring) | Partial | | |
+| 8 | [5.5 Logging & Monitoring](#55-logging-and-monitoring) | Done | | |
 | 9 | [5.6 Documentation](#56-documentation) | Done | | |
 | 10 | [5.10 Final Testing](#510-final-testing) | Pending | | |
 
@@ -165,11 +165,20 @@ Final polish phase focusing on error handling, performance optimization, documen
 
 ## 5.5 Logging and Monitoring
 
-**Status:** Partial (health checks done via Aspire)
+**Status:** Done
 
-- [ ] Add correlation ID middleware
-- [ ] Ensure structured logging for key events
-- [ ] Add /health/ready endpoint
+- [x] Add correlation ID middleware
+  - Created CorrelationIdMiddleware that reads X-Correlation-ID header or generates one
+  - Sets correlation ID on Activity baggage for OpenTelemetry
+  - Adds correlation ID to response headers and logging scope
+- [x] Ensure structured logging for key events
+  - Added RequestLoggingMiddleware for HTTP request logging
+  - Logs method, path, status code, duration, request ID, and user
+  - Skips health check endpoints to reduce noise
+- [x] Add /health/ready endpoint
+  - Added /ready endpoint with database health check
+  - Uses AspNetCore.HealthChecks.NpgSql for PostgreSQL connectivity check
+  - Existing /health and /alive endpoints preserved
 
 ---
 

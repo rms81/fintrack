@@ -2,6 +2,7 @@ using FinTrack.Core.Features.Example;
 using FinTrack.Host.Auth;
 using FinTrack.Host.Endpoints;
 using FinTrack.Host.Exceptions;
+using FinTrack.Host.Middleware;
 using FinTrack.Host.Security;
 using FinTrack.Infrastructure;
 using FinTrack.Infrastructure.Persistence;
@@ -71,6 +72,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline
+app.UseCorrelationId();
 app.UseAppExceptionHandler();
 app.UseSecurityHeaders();
 
@@ -84,6 +86,9 @@ app.MapScalarApiReference(options =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Request logging must come after authentication to capture user info
+app.UseRequestLogging();
 
 // Map Wolverine HTTP endpoints
 app.MapWolverineEndpoints();
