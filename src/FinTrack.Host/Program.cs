@@ -73,7 +73,6 @@ if (app.Environment.IsDevelopment())
 
 // Configure the HTTP request pipeline
 app.UseCorrelationId();
-app.UseRequestLogging();
 app.UseAppExceptionHandler();
 app.UseSecurityHeaders();
 
@@ -87,6 +86,9 @@ app.MapScalarApiReference(options =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Request logging must come after authentication to capture user info
+app.UseRequestLogging();
 
 // Map Wolverine HTTP endpoints
 app.MapWolverineEndpoints();
