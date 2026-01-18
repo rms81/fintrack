@@ -32,7 +32,7 @@ const CHART_COLORS = [
   '#84cc16', // lime
 ];
 
-type NlqHistoryItem = NlqResponse & { id: string; viewMode?: 'table' | 'chart' };
+type NlqHistoryItem = NlqResponse & { id: string };
 
 const DEFAULT_CURRENCY = 'EUR';
 
