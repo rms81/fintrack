@@ -1,19 +1,14 @@
 using System.Net;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace FinTrack.Tests.Integration.Middleware;
 
 public class RequestLoggingMiddlewareTests : IClassFixture<FinTrackWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
 
-    public RequestLoggingMiddlewareTests(FinTrackWebApplicationFactory factory, ITestOutputHelper output)
+    public RequestLoggingMiddlewareTests(FinTrackWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
