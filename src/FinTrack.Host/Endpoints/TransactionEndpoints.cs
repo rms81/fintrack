@@ -183,7 +183,10 @@ public static class TransactionEndpoints
         await db.SaveChangesAsync(ct);
 
         // Invalidate dashboard caches (transaction amounts/categories affect dashboard)
-        cache.RemoveByPrefix($"fintrack:dashboard:{profileId}");
+        foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+        {
+            cache.RemoveByPrefix(prefix);
+        }
         // Also invalidate categories cache (transaction count changes)
         cache.Remove(CacheKeys.Categories(profileId));
 
@@ -238,7 +241,10 @@ public static class TransactionEndpoints
         await db.SaveChangesAsync(ct);
 
         // Invalidate dashboard and categories caches
-        cache.RemoveByPrefix($"fintrack:dashboard:{profileId}");
+        foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+        {
+            cache.RemoveByPrefix(prefix);
+        }
         cache.Remove(CacheKeys.Categories(profileId));
 
         return Results.NoContent();

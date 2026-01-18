@@ -201,7 +201,10 @@ public static class ImportEndpoints
             await db.SaveChangesAsync(ct);
 
             // Invalidate dashboard and categories caches after import
-            cache.RemoveByPrefix($"fintrack:dashboard:{profileId}");
+            foreach (var prefix in CacheKeys.DashboardPrefixes(profileId))
+            {
+                cache.RemoveByPrefix(prefix);
+            }
             cache.Remove(CacheKeys.Categories(profileId));
 
             return Results.Ok(new ConfirmImportResponse(transactions.Count, skippedCount));

@@ -41,7 +41,24 @@ public static class CacheKeys
     public static string Profile(Guid profileId) => $"{Prefix}:profile:{profileId}";
 
     /// <summary>
-    /// Pattern to match all cache entries for a profile (for invalidation).
+    /// Wildcard-based cache key pattern for a profile.
     /// </summary>
+    /// <remarks>
+    /// This pattern uses '*' wildcards and is not compatible with RemoveByPrefix, which relies on
+    /// simple string prefix matching. It is currently unused and should not be used for cache
+    /// invalidation. Use concrete cache key builders (e.g. Categories, Rules, Profile) instead.
+    /// </remarks>
+    [Obsolete("Wildcard pattern is not compatible with RemoveByPrefix and is not used. Do not use this method for cache invalidation.")]
     public static string ProfilePattern(Guid profileId) => $"{Prefix}:*:{profileId}:*";
+
+    /// <summary>
+    /// Get all dashboard cache key prefixes for a profile (for invalidation).
+    /// </summary>
+    /// <returns>Array of prefixes to pass to RemoveByPrefix</returns>
+    public static string[] DashboardPrefixes(Guid profileId) =>
+    [
+        $"{Prefix}:dashboard:summary:{profileId}:",
+        $"{Prefix}:dashboard:category-spending:{profileId}:",
+        $"{Prefix}:dashboard:top-merchants:{profileId}:"
+    ];
 }
